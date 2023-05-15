@@ -70,9 +70,9 @@ public class CountWords {
             }
         }
         // Printing
-        for (String key : wordsMap.keySet()) {
-            System.out.println(key + ": " + wordsMap.get(key));
-        }
+        // for (String key : wordsMap.keySet()) {
+        //     System.out.println(key + ": " + wordsMap.get(key));
+        // }
     }
 
     private void countWordsWithHashSet() {
