@@ -110,7 +110,7 @@ public class CountWords {
     }
 
     public static void main(String[] args) {
-        new CountWords("Step1/input.txt");
+        new CountWords("/tmp/slr207/CC-MAIN-20230320083513-20230320113513-00000.warc.wet");
     }
 
 }
