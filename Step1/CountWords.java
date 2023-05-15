@@ -10,6 +10,7 @@ import java.util.HashSet;
 public class CountWords {
     
     private String text;
+    private String[] words;
 
     private HashMap<String, Integer> wordsMap;
     private HashSet<String> wordsSet;
@@ -22,25 +23,25 @@ public class CountWords {
 
         text = new String();
         text = readFile(path);
+        words = text.split(" ");
 
         System.out.println("Starting to count words with HashMap...");
         long startTime = System.currentTimeMillis();
-        countWordsWithHashMap();
+        countWordsFreqWithHashMap();
         long endTime = System.currentTimeMillis();
 
-        // System.out.println("Starting to count words with HashSet...");
-        // long startTime2 = System.currentTimeMillis();
-        // countWordsWithHashSet();
-        // long endTime2 = System.currentTimeMillis();
-
-        // System.out.println("Starting to count words with ArrayList...");
-        // long startTime3 = System.currentTimeMillis();
-        // countWordsWithArrayList();
-        // long endTime3 = System.currentTimeMillis();
+        System.out.println("Starting to count words with HashSet...");
+        long startTime2 = System.currentTimeMillis();
+        countWordsFreqWithHashSet();
+        long endTime2 = System.currentTimeMillis();
+        System.out.println("Starting to count words with ArrayList...");
+        long startTime3 = System.currentTimeMillis();
+        countWordsFreqWithArrayList();
+        long endTime3 = System.currentTimeMillis();
 
         System.out.println("HashMap: " + (endTime - startTime) + " ms");
-        // System.out.println("HashSet: " + (endTime2 - startTime2) + " ms");
-        // System.out.println("ArrayList: " + (endTime3 - startTime3) + " ms");
+        System.out.println("HashSet: " + (endTime2 - startTime2) + " ms");
+        System.out.println("ArrayList: " + (endTime3 - startTime3) + " ms");
     }
 
     private String readFile(String path) {
@@ -60,8 +61,7 @@ public class CountWords {
         return content;
     }
 
-    private void countWordsWithHashMap() {
-        String[] words = text.split(" ");
+    private void countWordsFreqWithHashMap() {
         for (String word : words) {
             if (wordsMap.containsKey(word)) {
                 wordsMap.put(word, wordsMap.get(word) + 1);
@@ -70,13 +70,12 @@ public class CountWords {
             }
         }
         // Printing
-        // for (String key : wordsMap.keySet()) {
-        //     System.out.println(key + ": " + wordsMap.get(key));
-        // }
+        for (String key : wordsMap.keySet()) {
+            System.out.println(key + ": " + wordsMap.get(key));
+        }
     }
 
-    private void countWordsWithHashSet() {
-        String[] words = text.split(" ");
+    private void countWordsFreqWithHashSet() {
         for (String word : words) {
             wordsSet.add(word);
         }
@@ -92,8 +91,7 @@ public class CountWords {
         }
     }
 
-    private void countWordsWithArrayList() {    
-        String[] words = text.split(" ");
+    private void countWordsFreqWithArrayList() {
         for (String word : words) {
             if (!wordsList.contains(word)) {
                 wordsList.add(word);
@@ -112,7 +110,7 @@ public class CountWords {
     }
 
     public static void main(String[] args) {
-        new CountWords("./tmp/slr207/input.txt");
+        new CountWords("Step1/input.txt");
     }
 
 }
