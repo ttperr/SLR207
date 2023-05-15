@@ -1,3 +1,5 @@
+package Step1;
+
 import java.io.*;
 import java.net.*;
 
@@ -6,7 +8,7 @@ public class SimpleClient {
     public static void main(String[] args) {
 
         // Server Host
-        final String serverHost = "tp-1a226-01.enst.fr";
+        final String serverHost = "tp-1a226-02.enst.fr";
 
         Socket socketOfClient = null;
         BufferedWriter os = null;
