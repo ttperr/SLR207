@@ -1,0 +1,35 @@
+{
+    // Utilisez IntelliSense pour en savoir plus sur les attributs possibles.
+    // Pointez pour afficher la description des attributs existants.
+    // Pour plus d'informations, visitez : https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "CountWords",
+            "request": "launch",
+            "mainClass": "Step1.CountWords",
+            "projectName": "SLR207_642afa42"
+        },
+        {
+            "type": "java",
+            "name": "SimpleClient",
+            "request": "launch",
+            "mainClass": "Step2.SimpleClient",
+            "projectName": "SLR207_642afa42"
+        },
+        {
+            "type": "java",
+            "name": "SimpleServerProgram",
+            "request": "launch",
+            "mainClass": "Step2.SimpleServerProgram",
+            "projectName": "SLR207_642afa42"
+        }
+    ]
+}
