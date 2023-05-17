@@ -22,6 +22,6 @@ J'ai donc implémenter un logiciel en java qui compte le nombre d’occurrences 
 * En ce qui concerne **le code de la santé publique**, les 5 premiers mots qui ressemblent à des mots (hors articles, etc..) sont :
     1. article
     2. santé
-    3. public
-    4. code
-    5. personnes
+    3. sont
+    4. directeur
+    5. conditions
