@@ -9,6 +9,13 @@
             "name": "CountWords",
             "request": "launch",
             "mainClass": "Step1.CountWords",
+            "projectName": "SLR207_d76b2835"
+        },
+        {
+            "type": "java",
+            "name": "CountWords",
+            "request": "launch",
+            "mainClass": "Step1.CountWords",
             "projectName": "SLR207_c1deae8"
         },
         {
