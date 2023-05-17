@@ -86,3 +86,35 @@ ssh-copy-id <nom de l ordinateur>
 ```
 
 ## Étape 3
+
+Pour connaître le chemin absolu de mon répertoire personnel il faut utiliser la commande :
+
+```bash
+pwd
+```
+
+> Ici, le chemin absolu est : /cal/exterieurs/tperrot-21
+
+Après création de fperso.txt, pour savoir où est stocké physiquement ce fichier (disque dur de l'ordinateur ou autre part) il suffit d'utiliser cette commande :
+
+```bash
+df -h fperso.txt
+```
+
+> Ici, le fichier n'est pas stocké sur le disque dur de l'ordinateur. De plus, le '-h' permet d'avoir une taille lisible par un humain.
+
+Cependant, les fichiers et dossiers du répertoire /tmp/ sont stockés sur le disque dur de l'ordinateur.
+
+Maintenant, pour, à partir de A, transférer le fichier /tmp/local.txt sur B (dans /tmp/tperrot-21/local.txt) en utilisant scp il faut faire :
+
+```bash
+scp /tmp/tperrot-21/local.txt <nom de l ordinateur>:/tmp/tperrot-21/local.txt
+```
+
+Cependant, pour, à partir de A, transférer le fichier de B (depuis /tmp/tperrot-21/local.txt) vers C (dans /tmp/tperrot-21/local.txt) en utilisant scp il faut faire :
+
+```bash
+scp <nom de l ordinateur>:/tmp/tperrot-21/local.txt <nom de l ordinateur>:/tmp/tperrot-21/local.txt
+```
+
+## Étape 4
