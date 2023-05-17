@@ -19,7 +19,7 @@ public class CountWords {
         words = text.split(" ");
 
         System.out.println(
-                "Starting to count words...");
+                "\nStarting to count words...");
         long startTime = System.currentTimeMillis();
         HashMap<String, Integer> wordsMap = countWordsFreq();
         long endTime = System.currentTimeMillis();
@@ -30,19 +30,33 @@ public class CountWords {
     }
 
     private String readFile(String path) {
-        File file = new File(path);
-        System.out.println(
-                "\n################################### " + file.getName() + " ###################################\n");
-        BufferedReader br;
         String content = new String();
         try {
+            File file = new File(path);
+            System.out.println(
+                    "\n################################### " + file.getName()
+                            + " ###################################\n");
+            BufferedReader br;
             br = new BufferedReader(new FileReader(file));
             String line;
+            // doing a loading bar
+            int i = 0;
+            int size = (int) file.length();
+            int step = size / 100;
+            int progress = 0;
             while ((line = br.readLine()) != null) {
                 content += " " + line;
+                i += line.length();
+                if (i > progress) {
+                    System.out.print("\r");
+                    System.out.print("Loading: " + progress / step + "%");
+                    progress += step;
+                }
             }
+            System.out.print("\nLoaded\n");
             br.close();
         } catch (Exception e) {
+            System.out.println("err");
             e.printStackTrace();
         }
         return content;
@@ -83,8 +97,8 @@ public class CountWords {
     }
 
     public static void main(String[] args) {
-        // new CountWords("Step1/data/input.txt", -1);
-        // new CountWords("Step1/data/forestier_mayotte.txt", -1);
+        new CountWords("Step1/data/input.txt", -1);
+        new CountWords("Step1/data/forestier_mayotte.txt", -1);
         new CountWords("Step1/data/deontologie_police_nationale.txt", 50);
         new CountWords("Step1/data/domaine_public_fluvial.txt", 50);
         new CountWords("Step1/data/sante_publique.txt", 50);
