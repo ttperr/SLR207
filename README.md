@@ -52,7 +52,7 @@ ifconfig
 Pour obtenir les adresses IP en ligne de commande à partir du nom d'un ordinateur il faut utiliser la commande :
 
 ```bash
-host <nom de l'ordinateur>
+host <nom de l ordinateur>
 ```
 
 Pour obtenir les noms associés en ligne de commande à partir d'une adresse IP il faut utiliser la commande :
@@ -74,7 +74,7 @@ echo $((2 + 3))
 Pour lancer ce calcul à distance, nous pouvons procéder à l'aide de *ssh* comme cela :
 
 ```bash
-ssh <nom de l'ordinateur> echo $((2 + 3))
+ssh <nom de l ordinateur> echo $((2 + 3))
 ```
 
 > Par ailleurs, cette commande permet d'avoir le résultat d'un calcul immédiatement après saisie du mot de passe.
@@ -82,7 +82,7 @@ ssh <nom de l'ordinateur> echo $((2 + 3))
 Pour ne plus avoir à faire à ce mot de passe il suffit d'utiliser d'enregistrer sa clé publique sur l'ordinateur distant. Pour cela il faut utiliser la commande :
 
 ```bash
-ssh-copy-id <nom de l'ordinateur>
+ssh-copy-id <nom de l ordinateur>
 ```
 
 ## Étape 3
