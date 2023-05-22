@@ -32,7 +32,7 @@ J'ai donc implémenter un logiciel en java qui compte le nombre d’occurrences 
 
 ## Étape 2
 
-Pour l'étape 2, j'ai utilisé l'ordinateur **tp-1a201-12** (tp-1a201-12.enst.fr). 
+Pour l'étape 2, j'ai utilisé l'ordinateur **tp-1a201-12** (tp-1a201-12.enst.fr).
 Pour trouver son nom à l'aide d'une commande il faut écrire :
 
 ```bash
