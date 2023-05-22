@@ -1,4 +1,4 @@
-package Step2;
+package MultiThread;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

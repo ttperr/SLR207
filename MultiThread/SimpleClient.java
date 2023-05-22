@@ -1,4 +1,4 @@
-package Step2;
+package MultiThread;
 
 import java.io.*;
 import java.net.*;
@@ -56,7 +56,7 @@ public class SimpleClient {
             String responseLine;
             while ((responseLine = is.readLine()) != null) {
                 System.out.println("Server: " + responseLine);
-                if (responseLine.indexOf("OK") != -1) {
+                if (responseLine.contains("OK")) {
                     break;
                 }
             }
