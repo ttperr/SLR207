@@ -4,19 +4,17 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class CountWords {
 
-    private String text;
-    private String[] words;
+    private final String[] words;
 
     public CountWords(String path, int limit) {
         long startTime = System.currentTimeMillis();
-        text = readFile(path);
+        String text = readFile(path);
         words = text.split(" ");
         long endTime = System.currentTimeMillis();
         System.out.println("\nTook: " + (endTime - startTime) + " ms to read & split\n");
@@ -35,7 +33,7 @@ public class CountWords {
     }
 
     private String readFile(String path) {
-        String content = new String();
+        String content = "";
         try {
             File file = new File(path);
             System.out.println("\n################################### " + file.getName()
@@ -71,7 +69,7 @@ public class CountWords {
     }
 
     private HashMap<String, Integer> countWordsFreq() {
-        HashMap<String, Integer> wordsMap = new HashMap<String, Integer>();
+        HashMap<String, Integer> wordsMap = new HashMap<>();
         for (String word : words) {
             if (wordsMap.containsKey(word)) {
                 wordsMap.put(word, wordsMap.get(word) + 1);
@@ -85,7 +83,7 @@ public class CountWords {
     private void printFreq(HashMap<String, Integer> wordsMap, int limit) {
         // Sorting
         List<Map.Entry<String, Integer>> sortedList = new ArrayList<>(wordsMap.entrySet());
-        Collections.sort(sortedList, (a, b) -> {
+        sortedList.sort((a, b) -> {
             int freqComparison = b.getValue().compareTo(a.getValue());
             if (freqComparison == 0) {
                 return a.getKey().compareTo(b.getKey());
