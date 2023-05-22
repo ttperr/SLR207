@@ -6,7 +6,6 @@ fileName="SimpleServerProgram"
 fileExtension=".java"
 computers=("tp-1a226-01" "tp-1a226-02" "tp-1a226-03" "tp-1a226-04" "tp-1a226-05")
 domain="enst.fr"
-#computers=("tp-1a226-01")
 for c in ${computers[@]}; do
   c="$c.$domain"
   command0=("ssh" "$login@$c" "lsof -ti | xargs kill -9")

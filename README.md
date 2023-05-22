@@ -74,7 +74,7 @@ echo $((2 + 3))
 Pour lancer ce calcul à distance, nous pouvons procéder à l'aide de *ssh* comme cela :
 
 ```bash
-ssh <nom de l ordinateur> echo $((2 + 3))
+ssh tperrot-21@<nom de l ordinateur> echo $((2 + 3))
 ```
 
 > Par ailleurs, cette commande permet d'avoir le résultat d'un calcul immédiatement après saisie du mot de passe.
@@ -82,7 +82,7 @@ ssh <nom de l ordinateur> echo $((2 + 3))
 Pour ne plus avoir à faire à ce mot de passe il suffit d'utiliser d'enregistrer sa clé publique sur l'ordinateur distant. Pour cela il faut utiliser la commande :
 
 ```bash
-ssh-copy-id <nom de l ordinateur>
+ssh-copy-id tperrot-21@<nom de l ordinateur>
 ```
 
 ## Étape 3
@@ -108,13 +108,23 @@ Cependant, les fichiers et dossiers du répertoire /tmp/ sont stockés sur le di
 Maintenant, pour, à partir de A, transférer le fichier /tmp/local.txt sur B (dans /tmp/tperrot-21/local.txt) en utilisant scp il faut faire :
 
 ```bash
-scp /tmp/tperrot-21/local.txt <nom de l ordinateur>:/tmp/tperrot-21/local.txt
+scp /tmp/tperrot-21/local.txt tperrot-21@<nom de l ordinateur>:/tmp/tperrot-21/local.txt
 ```
 
 Cependant, pour, à partir de A, transférer le fichier de B (depuis /tmp/tperrot-21/local.txt) vers C (dans /tmp/tperrot-21/local.txt) en utilisant scp il faut faire :
 
 ```bash
-scp <nom de l ordinateur>:/tmp/tperrot-21/local.txt <nom de l ordinateur>:/tmp/tperrot-21/local.txt
+scp tperrot-21@<nom de l ordinateur>:/tmp/tperrot-21/local.txt <nom de l ordinateur>:/tmp/tperrot-21/local.txt
 ```
 
 ## Étape 4
+
+Pour exécuter à distance (depuis A sur la machine B) le slave.jar il faut utiliser la commande :
+
+```bash
+ssh tperrot-21@<nom de l ordinateur> 'java -jar /tmp/tperrot-21/slave.jar'
+```
+
+## Étape 5
+
+
