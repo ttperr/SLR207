@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "SLAVE",
+            "request": "launch",
+            "mainClass": "Step5.SLAVE",
+            "projectName": "SLR207_d76b2835"
+        },
+        {
+            "type": "java",
             "name": "CountWords",
             "request": "launch",
             "mainClass": "Step1.CountWords",

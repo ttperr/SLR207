@@ -125,6 +125,6 @@ Pour exécuter à distance (depuis A sur la machine B) le slave.jar il faut util
 ssh tperrot-21@<nom de l ordinateur> 'java -jar /tmp/tperrot-21/slave.jar'
 ```
 
-## Étape 5
+## Étape 6
 
-
+Lors de mon étape 6, étant donné le TimeOut d'attente de sortie standard et de sortie d'erreur. Le TimeOut peut-être 2 fois supérieur car le programme va "attendre" une erreur même si la sortie standard fonctionne bien et n'est pas terminée.
