@@ -1,4 +1,4 @@
-package MultiThread;
+package Step5;
 
 public class SLAVE {
     public static void main(String[] args) {
