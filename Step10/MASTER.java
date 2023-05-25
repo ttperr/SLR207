@@ -55,6 +55,26 @@ public class MASTER {
     }
 
     private static void copySplitsToMachines(JSONObject computers) {
+        // Check if there is a splits directory
+        File splitsDirectory = new File(SPLIT_DIRECTORY);
+        if (!splitsDirectory.exists()) {
+            System.err.println("Le répertoire " + SPLIT_DIRECTORY + " n'existe pas.");
+            return;
+        }
+        
+        // Check if there are files in the splits directory
+        File[] splitFiles = splitsDirectory.listFiles();
+        if (splitFiles.length == 0) {
+            System.err.println("Le répertoire " + SPLIT_DIRECTORY + " est vide.");
+            return;
+        }
+
+        // Check if there is the same number of files than the number of machines
+        if (splitFiles.length != computers.length()) {
+            System.err.println("Le nombre de fichiers dans le répertoire " + SPLIT_DIRECTORY + " n'est pas égal au nombre de machines.");
+            return;
+        }
+        
         Map<String, String> splits = Map.of("S0.txt", "Deer", "S1.txt", "Car", "S2.txt", "Deer Car Beer");
 
         computers.keySet().forEach(machineNumber -> {
