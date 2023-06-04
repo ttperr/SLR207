@@ -69,7 +69,7 @@ public class MASTER {
         }
 
         // Check if there is the same number of files than the number of machines
-        if (splitFiles.length != computers.length) {
+        if (splitFiles.length != computers.length()) {
             System.err.println("Le nombre de fichiers dans le répertoire " + SPLIT_DIRECTORY + " n'est pas égal au nombre de machines.");
             return;
         }
