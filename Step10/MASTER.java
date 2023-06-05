@@ -28,6 +28,7 @@ public class MASTER {
             List<Process> processesSplit = copySplitsToMachines(computers);
 
             // Attendre que tous les SCP se terminent
+            assert processesSplit != null;
             waitForProcesses(processesSplit);
             System.out.println("Copie des splits sur les machines effectué.");
 
@@ -96,7 +97,7 @@ public class MASTER {
 
             try {
                 // Copier le fichier sur la machine distante
-                ProcessBuilder pb = new ProcessBuilder("scp", splitFiles[Integer.parseInt(machineNumber) - 1].getAbsolutePath(), machineDirectory);
+                ProcessBuilder pb = new ProcessBuilder("scp", splitFiles[Integer.parseInt(machineNumber)].getAbsolutePath(), machineDirectory);
                 Process process = pb.start();
                 processes.add(process);
 

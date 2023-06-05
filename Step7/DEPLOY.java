@@ -18,6 +18,11 @@ public class DEPLOY {
             String computersJson = new String(Files.readAllBytes(Path.of(COMPUTERS_FILE)));
             JSONObject computers = new JSONObject(computersJson);
 
+            // Création du fichier SLAVE.jar à partir de SLAVE.java
+            ProcessBuilder javacPb = new ProcessBuilder("javac", "SLAVE.java");
+            Process javacProcess = javacPb.start();
+            int javacExitCode = javacProcess.waitFor();
+
             // Tester la connexion SSH sur chaque machine et copier le fichier "slave.jar" si la connexion réussit
             computers.keySet().forEach(machineNumber -> {
                 String ipAddress = computers.getString(machineNumber);
@@ -30,7 +35,7 @@ public class DEPLOY {
                     int sshExitCode = sshProcess.waitFor();
 
                     if (sshExitCode == 0) {
-                        // La connexion SSH a réussi
+                        // La connexion SSH a réussi.
                         System.out.println("Connexion SSH réussie sur la machine " + machineNumber + ": " + ipAddress);
 
                         // Créer le répertoire dans /tmp s'il n'existe pas déjà
@@ -59,14 +64,14 @@ public class DEPLOY {
                             System.err.println("Erreur lors de la création du répertoire sur la machine " + machineNumber + ": " + ipAddress);
                         }
                     } else {
-                        // La connexion SSH a échoué
+                        // La connexion SSH a échoué.
                         System.err.println("Échec de la connexion SSH sur la machine " + machineNumber + ": " + ipAddress);
                     }
                 } catch (IOException | InterruptedException e) {
                     e.printStackTrace();
                 }
             });
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }
