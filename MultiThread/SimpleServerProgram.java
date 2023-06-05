@@ -10,7 +10,7 @@ import java.net.Socket;
 
 public class SimpleServerProgram {
 
-    public static void main(String args[]) {
+    public static void main(String[] args) {
 
         ServerSocket listener = null;
         String line;
