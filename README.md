@@ -129,6 +129,15 @@ ssh tperrot-21@<nom de l ordinateur> 'java -jar /tmp/tperrot-21/slave.jar'
 
 Lors de mon étape 6, étant donné le TimeOut d'attente de sortie standard et de sortie d'erreur. Le TimeOut peut-être 2 fois supérieur, car le programme va "attendre" une erreur même si la sortie standard fonctionne bien et n'est pas terminée.
 
+## Étape 7
+
+Le programme ``DEPLOY`` lance les connexions de manière séquentielle. Pour attendre que le mkdir termine correctement j'utilise la fonction ``waitFor``.
+De même, le programme lance les copies de manière séquentielle.
+
+## Étape 8
+
+Le programme ``CLEAN`` lance les commandes d'effacement de manière séquentielle.
+
 ## Étape 10
 
 Lors de la création des dossiers, je récupère le code de sortie afin de vérifier la bonne création. L'envoie des copies est séquentielle. Mais la phase de map ne l'est pas.
