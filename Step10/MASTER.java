@@ -1,4 +1,4 @@
-package Step10;
+    package Step10;
 
 import org.json.JSONObject;
 
@@ -9,8 +9,9 @@ import java.nio.file.Path;
 
 public class MASTER {
     private static final String USERNAME = "tperrot-21";
-    private static final String SPLIT_DIRECTORY = "/tmp/" + USERNAME + "/splits";
-    private static final String COMPUTERS_FILE = "../computers.json";
+    private static final String SPLIT_DIRECTORY_REMOTE = "/tmp/" + USERNAME + "/splits";
+    private static final String SPLIT_DIRECTORY = "Step10/splits";
+    private static final String COMPUTERS_FILE = "computers.json";
 
     public static void main(String[] args) {
         try {
@@ -33,11 +34,12 @@ public class MASTER {
     private static void createSplitDirectoryOnMachines(JSONObject computers) {
         computers.keySet().forEach(machineNumber -> {
             String ipAddress = computers.getString(machineNumber);
-            String machineDirectory = String.format("%s@%s:%s", USERNAME, ipAddress, SPLIT_DIRECTORY);
+            
+            String machine = String.format("%s@%s", USERNAME, ipAddress);
 
             try {
                 // Créer le répertoire sur la machine distante
-                ProcessBuilder pb = new ProcessBuilder("ssh", machineDirectory, "mkdir", "-p", SPLIT_DIRECTORY);
+                ProcessBuilder pb = new ProcessBuilder("ssh", machine, "mkdir", "-p", SPLIT_DIRECTORY_REMOTE);
                 Process process = pb.start();
                 int exitCode = process.waitFor();
 
@@ -76,7 +78,7 @@ public class MASTER {
 
         computers.keySet().forEach(machineNumber -> {
             String ipAddress = computers.getString(machineNumber);
-            String machineDirectory = String.format("%s@%s:%s", USERNAME, ipAddress, SPLIT_DIRECTORY);
+            String machineDirectory = String.format("%s@%s:%s", USERNAME, ipAddress, SPLIT_DIRECTORY_REMOTE);
 
             try {
                 // Copier le fichier sur la machine distante

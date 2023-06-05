@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "MASTER",
+            "request": "launch",
+            "mainClass": "Step10.MASTER",
+            "projectName": "SLR207_26d3f5b9"
+        },
+        {
+            "type": "java",
             "name": "SLAVE",
             "request": "launch",
             "mainClass": "Step5.SLAVE",
