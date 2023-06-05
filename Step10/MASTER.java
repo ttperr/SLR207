@@ -123,7 +123,6 @@ public class MASTER {
         List<Process> processes = new ArrayList<>();
 
         machines.forEach(ipAddress -> {
-            int machineNumber = machines.indexOf(ipAddress);
             String machineDirectory = String.format("%s@%s:%s", USERNAME, ipAddress, HOME_DIRECTORY);
 
             try {
