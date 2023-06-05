@@ -1,7 +1,5 @@
 package Step10;
 
-import org.json.JSONObject;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -15,27 +13,35 @@ public class MASTER {
     private static final String SPLIT_DIRECTORY_REMOTE = HOME_DIRECTORY + "/splits";
     private static final String SPLIT_DIRECTORY = "Step10/splits";
     private static final String SLAVE_CLASS_NAME = "Step10.SLAVE";
-    private static final String COMPUTERS_FILE = "computers.json";
+    private static final String MACHINES_FILE = "machines.txt";
 
     public static void main(String[] args) {
         try {
-            // Lire le fichier "computers.json"
-            String computersJson = new String(Files.readAllBytes(Path.of(COMPUTERS_FILE)));
-            JSONObject computers = new JSONObject(computersJson);
+            // Lire le fichier "machines.txt"
+            Path machinesFilePath = Path.of(MACHINES_FILE);
+            List<String> machines = Files.readAllLines(machinesFilePath);
 
             // Créer les répertoires sur les machines
-            createSplitDirectoryOnMachines(computers);
+            createSplitDirectoryOnMachines(machines);
 
             // Copier les fichiers de splits vers les machines
-            List<Process> processesSplit = copySplitsToMachines(computers);
+            List<Process> processesSplit = copySplitsToMachines(machines);
 
             // Attendre que tous les SCP se terminent
             assert processesSplit != null;
             waitForProcesses(processesSplit);
-            System.out.println("Copie des splits sur les machines effectué.");
+            System.out.println("Copie des splits sur les machines effectuée.");
+
+            // Copier le fichier machines.txt vers les machines
+            List<Process> processesCopyMachines = copyMachinesFile(machines);
+
+            // Attendre que toutes les copies se terminent
+            assert processesCopyMachines != null;
+            waitForProcesses(processesCopyMachines);
+            System.out.println("Copie du fichier machines.txt effectuée.");
 
             // Lancer la phase de map sur les machines
-            List<Process> processesMap = runMapPhase(computers);
+            List<Process> processesMap = runMapPhase(machines);
 
             // Attendre que tous les SLAVES se terminent
             waitForProcesses(processesMap);
@@ -46,10 +52,9 @@ public class MASTER {
         }
     }
 
-    private static void createSplitDirectoryOnMachines(JSONObject computers) {
-        computers.keySet().forEach(machineNumber -> {
-            String ipAddress = computers.getString(machineNumber);
-
+    private static void createSplitDirectoryOnMachines(List<String> machines) {
+        machines.forEach(ipAddress -> {
+            int machineNumber = machines.indexOf(ipAddress);
             String machine = String.format("%s@%s", USERNAME, ipAddress);
 
             try {
@@ -70,7 +75,7 @@ public class MASTER {
         });
     }
 
-    private static List<Process> copySplitsToMachines(JSONObject computers) {
+    private static List<Process> copySplitsToMachines(List<String> machines) {
         // Check if there is a splits directory
         File splitsDirectory = new File(SPLIT_DIRECTORY);
         if (!splitsDirectory.exists()) {
@@ -87,16 +92,16 @@ public class MASTER {
         }
 
         // Check if there is the same number of files than the number of machines
-        if (splitFiles.length != computers.length()) {
+        if (splitFiles.length != machines.size()) {
             System.err.println("Le nombre de fichiers dans le répertoire " + SPLIT_DIRECTORY
                     + " n'est pas égal au nombre de machines.");
             return null;
         }
 
-        List<Process> processes = new ArrayList<Process>();
+        List<Process> processes = new ArrayList<>();
 
-        computers.keySet().forEach(machineNumber -> {
-            String ipAddress = computers.getString(machineNumber);
+        machines.forEach(ipAddress -> {
+            int machineNumber = machines.indexOf(ipAddress);
             String machineDirectory = String.format("%s@%s:%s", USERNAME, ipAddress, SPLIT_DIRECTORY_REMOTE);
 
             try {
@@ -114,11 +119,33 @@ public class MASTER {
         return processes;
     }
 
-    private static List<Process> runMapPhase(JSONObject computers) {
+    private static List<Process> copyMachinesFile(List<String> machines) {
         List<Process> processes = new ArrayList<>();
 
-        computers.keySet().forEach(machineNumber -> {
-            String ipAddress = computers.getString(machineNumber);
+        machines.forEach(ipAddress -> {
+            int machineNumber = machines.indexOf(ipAddress);
+            String machineDirectory = String.format("%s@%s:%s", USERNAME, ipAddress, HOME_DIRECTORY);
+
+            try {
+                // Copier le fichier machines.txt sur la machine distante
+                ProcessBuilder pb = new ProcessBuilder("scp",
+                        MACHINES_FILE, machineDirectory);
+                Process process = pb.start();
+                processes.add(process);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
+        return processes;
+    }
+
+    private static List<Process> runMapPhase(List<String> machines) {
+        List<Process> processes = new ArrayList<>();
+
+        machines.forEach(ipAddress -> {
+            int machineNumber = machines.indexOf(ipAddress);
             String machine = String.format("%s@%s", USERNAME, ipAddress);
 
             try {

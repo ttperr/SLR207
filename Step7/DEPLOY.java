@@ -1,23 +1,22 @@
 package Step7;
 
-import org.json.JSONObject;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 public class DEPLOY {
     private static final String USERNAME = "tperrot-21";
     private static final String REMOTE_DIR = "/tmp/" + USERNAME + "/";
-    private static final String COMPUTERS_FILE = "computers.json";
     private static final String SLAVE = "Step10/SLAVE";
     private static final String SLAVE_JAR = "SLAVE.jar";
+    private static final String MACHINES_FILE = "machines.txt";
 
     public static void main(String[] args) {
         try {
-            // Lire le fichier "computers.json"
-            String computersJson = new String(Files.readAllBytes(Path.of(COMPUTERS_FILE)));
-            JSONObject computers = new JSONObject(computersJson);
+            // Lire le fichier "machines.txt"
+            Path machinesFilePath = Path.of(MACHINES_FILE);
+            List<String> machines = Files.readAllLines(machinesFilePath);
 
             // Création du fichier SLAVE.jar à partir de SLAVE.java et suppression de
             // SLAVE.class directement
@@ -66,8 +65,8 @@ public class DEPLOY {
 
             // Tester la connexion SSH sur chaque machine et copier le fichier "slave.jar"
             // si la connexion réussit
-            computers.keySet().forEach(machineNumber -> {
-                String ipAddress = computers.getString(machineNumber);
+            machines.forEach(ipAddress -> {
+                int machineNumber = machines.indexOf(ipAddress);
                 String machine = String.format("%s@%s", USERNAME, ipAddress);
 
                 try {
