@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "DEPLOY",
+            "request": "launch",
+            "mainClass": "Step7.DEPLOY",
+            "projectName": "SLR207_26d3f5b9"
+        },
+        {
+            "type": "java",
             "name": "MASTER",
             "request": "launch",
             "mainClass": "Step10.MASTER",
