@@ -11,8 +11,10 @@ import java.util.List;
 
 public class MASTER {
     private static final String USERNAME = "tperrot-21";
-    private static final String SPLIT_DIRECTORY_REMOTE = "/tmp/" + USERNAME + "/splits";
+    private static final String HOME_DIRECTORY = "/tmp/" + USERNAME;
+    private static final String SPLIT_DIRECTORY_REMOTE = HOME_DIRECTORY + "/splits";
     private static final String SPLIT_DIRECTORY = "Step10/splits";
+    private static final String SLAVE_CLASS_NAME = "Step10.SLAVE";
     private static final String COMPUTERS_FILE = "computers.json";
 
     public static void main(String[] args) {
@@ -47,7 +49,7 @@ public class MASTER {
     private static void createSplitDirectoryOnMachines(JSONObject computers) {
         computers.keySet().forEach(machineNumber -> {
             String ipAddress = computers.getString(machineNumber);
-            
+
             String machine = String.format("%s@%s", USERNAME, ipAddress);
 
             try {
@@ -59,7 +61,8 @@ public class MASTER {
                 if (exitCode == 0) {
                     System.out.println("Répertoire créé sur la machine " + machineNumber + ": " + ipAddress);
                 } else {
-                    System.err.println("Erreur lors de la création du répertoire sur la machine " + machineNumber + ": " + ipAddress);
+                    System.err.println("Erreur lors de la création du répertoire sur la machine " + machineNumber + ": "
+                            + ipAddress);
                 }
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
@@ -85,7 +88,8 @@ public class MASTER {
 
         // Check if there is the same number of files than the number of machines
         if (splitFiles.length != computers.length()) {
-            System.err.println("Le nombre de fichiers dans le répertoire " + SPLIT_DIRECTORY + " n'est pas égal au nombre de machines.");
+            System.err.println("Le nombre de fichiers dans le répertoire " + SPLIT_DIRECTORY
+                    + " n'est pas égal au nombre de machines.");
             return null;
         }
 
@@ -97,7 +101,8 @@ public class MASTER {
 
             try {
                 // Copier le fichier sur la machine distante
-                ProcessBuilder pb = new ProcessBuilder("scp", splitFiles[Integer.parseInt(machineNumber)].getAbsolutePath(), machineDirectory);
+                ProcessBuilder pb = new ProcessBuilder("scp",
+                        SPLIT_DIRECTORY + File.separator + "S" + machineNumber + ".txt", machineDirectory);
                 Process process = pb.start();
                 processes.add(process);
 
@@ -118,7 +123,9 @@ public class MASTER {
 
             try {
                 // Lancer le SLAVE avec les arguments appropriés
-                ProcessBuilder pb = new ProcessBuilder("ssh", machine, "java", "-jar", "/tmp/" + USERNAME + "/slave.jar", "0", "S" + machineNumber + ".txt");
+                ProcessBuilder pb = new ProcessBuilder("ssh", machine, "java", "-cp",
+                        HOME_DIRECTORY + File.separator + "SLAVE.jar", SLAVE_CLASS_NAME, "0",
+                        SPLIT_DIRECTORY_REMOTE + File.separator + "S" + machineNumber + ".txt");
                 Process process = pb.start();
                 processes.add(process);
             } catch (IOException e) {

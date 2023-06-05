@@ -11,8 +11,8 @@ import java.util.Map;
 
 public class SLAVE {
     private static final String USERNAME = "tperrot-21";
-    private static final String SPLIT_DIRECTORY = "/tmp/" + USERNAME + "/splits";
-    private static final String MAP_DIRECTORY = "/tmp/" + USERNAME + "/maps";
+    private static final String HOME_DIRECTORY = "/tmp/" + USERNAME;
+    private static final String MAP_DIRECTORY = HOME_DIRECTORY + "/maps";
 
     public static void main(String[] args) {
         if (args.length < 2) {
@@ -22,6 +22,9 @@ public class SLAVE {
 
         int mode = Integer.parseInt(args[0]);
         String inputFile = args[1];
+
+        System.out.println("Mode: " + mode);
+        System.out.println("Input file: " + inputFile);
 
         if (mode == 0) {
             processSplit(inputFile);
@@ -33,8 +36,7 @@ public class SLAVE {
     private static void processSplit(String inputFile) {
         try {
             // Lire le fichier split
-            String inputFilePath = SPLIT_DIRECTORY + File.separator + inputFile;
-            BufferedReader reader = new BufferedReader(new FileReader(inputFilePath));
+            BufferedReader reader = new BufferedReader(new FileReader(inputFile));
 
             // Créer la map pour stocker les mots et leur fréquence
             Map<String, Integer> wordMap = new HashMap<>();
@@ -50,10 +52,23 @@ public class SLAVE {
 
             reader.close();
 
-            // Écrire le résultat dans le fichier de sortie UMx.txt
-            String outputFileName = "UM" + inputFile.charAt(1);
+            // Création du répertoire de sortie
+            File mapDirectory = new File(MAP_DIRECTORY);
+            mapDirectory.mkdirs();
+
+            // Écrire le résultat dans le fichier de sortie UMx.txt where x is the string
+            // between S and .txt in the input file name
+            String outputFileName = "UM" + inputFile.substring(inputFile.indexOf("S") + 1, inputFile.indexOf(".txt"))
+                    + ".txt";
             String outputFilePath = MAP_DIRECTORY + File.separator + outputFileName;
-            BufferedWriter writer = new BufferedWriter(new FileWriter(outputFilePath));
+
+            // Crée le fichier de sortie
+            System.out.println("Création du fichier de sortie " + outputFilePath);
+            File outputFile = new File(outputFilePath);
+            outputFile.createNewFile();
+
+            // Écrire le résultat dans le fichier de sortie
+            BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
 
             // Écrire les mots et leur fréquence dans le fichier de sortie
             for (Map.Entry<String, Integer> entry : wordMap.entrySet()) {

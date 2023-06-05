@@ -7,7 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class CLEAN {
-    private static final String USERNAME = "votre_nom_utilisateur";
+    private static final String USERNAME = "tperrot-21";
     private static final String REMOTE_DIR = "/tmp/" + USERNAME + "/";
     private static final String COMPUTERS_FILE = "computers.json";
 
@@ -24,7 +24,7 @@ public class CLEAN {
 
                 try {
                     // Construire la commande SSH pour supprimer le répertoire distant
-                    String command = String.format("ssh %s 'rm -rf %s'", machine, REMOTE_DIR);
+                    String command = String.format("ssh %s rm -rf %s", machine, REMOTE_DIR);
 
                     // Exécuter la commande à distance
                     Process process = Runtime.getRuntime().exec(command);
@@ -35,7 +35,8 @@ public class CLEAN {
                     if (exitCode == 0) {
                         System.out.println("Répertoire supprimé sur la machine " + machineNumber + ": " + ipAddress);
                     } else {
-                        System.err.println("Erreur lors de la suppression du répertoire sur la machine " + machineNumber + ": " + ipAddress);
+                        System.err.println("Erreur lors de la suppression du répertoire sur la machine " + machineNumber
+                                + ": " + ipAddress);
                     }
                 } catch (IOException | InterruptedException e) {
                     e.printStackTrace();
