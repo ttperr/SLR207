@@ -1,4 +1,4 @@
-    package Step10;
+package Step10;
 
 import org.json.JSONObject;
 
@@ -6,6 +6,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MASTER {
     private static final String USERNAME = "tperrot-21";
@@ -23,9 +25,19 @@ public class MASTER {
             createSplitDirectoryOnMachines(computers);
 
             // Copier les fichiers de splits vers les machines
-            copySplitsToMachines(computers);
+            List<Process> processesSplit = copySplitsToMachines(computers);
 
-            System.out.println("Copie des fichiers terminée.");
+            // Attendre que tous les SCP se terminent
+            waitForProcesses(processesSplit);
+            System.out.println("Copie des splits sur les machines effectué.");
+
+            // Lancer la phase de map sur les machines
+            List<Process> processesMap = runMapPhase(computers);
+
+            // Attendre que tous les SLAVES se terminent
+            waitForProcesses(processesMap);
+
+            System.out.println("MAP FINISHED");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -54,12 +66,12 @@ public class MASTER {
         });
     }
 
-    private static void copySplitsToMachines(JSONObject computers) {
+    private static List<Process> copySplitsToMachines(JSONObject computers) {
         // Check if there is a splits directory
         File splitsDirectory = new File(SPLIT_DIRECTORY);
         if (!splitsDirectory.exists()) {
             System.err.println("Le répertoire " + SPLIT_DIRECTORY + " n'existe pas.");
-            return;
+            return null;
         }
 
         // Check if there are files in the splits directory
@@ -67,14 +79,16 @@ public class MASTER {
 
         if (splitFiles == null || splitFiles.length == 0) {
             System.err.println("Le répertoire " + SPLIT_DIRECTORY + " est vide.");
-            return;
+            return null;
         }
 
         // Check if there is the same number of files than the number of machines
         if (splitFiles.length != computers.length()) {
             System.err.println("Le nombre de fichiers dans le répertoire " + SPLIT_DIRECTORY + " n'est pas égal au nombre de machines.");
-            return;
+            return null;
         }
+
+        List<Process> processes = new ArrayList<Process>();
 
         computers.keySet().forEach(machineNumber -> {
             String ipAddress = computers.getString(machineNumber);
@@ -84,14 +98,44 @@ public class MASTER {
                 // Copier le fichier sur la machine distante
                 ProcessBuilder pb = new ProcessBuilder("scp", splitFiles[Integer.parseInt(machineNumber) - 1].getAbsolutePath(), machineDirectory);
                 Process process = pb.start();
-                int exitCode = process.waitFor();
+                processes.add(process);
 
-                if (exitCode == 0) {
-                    System.out.println("Fichier copié sur la machine " + machineNumber + ": " + ipAddress);
-                } else {
-                    System.err.println("Erreur lors de la copie du fichier sur la machine " + machineNumber + ": " + ipAddress);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
+        return processes;
+    }
+
+    private static List<Process> runMapPhase(JSONObject computers) {
+        List<Process> processes = new ArrayList<>();
+
+        computers.keySet().forEach(machineNumber -> {
+            String ipAddress = computers.getString(machineNumber);
+            String machine = String.format("%s@%s", USERNAME, ipAddress);
+
+            try {
+                // Lancer le SLAVE avec les arguments appropriés
+                ProcessBuilder pb = new ProcessBuilder("ssh", machine, "java", "-jar", "/tmp/" + USERNAME + "/slave.jar", "0", "S" + machineNumber + ".txt");
+                Process process = pb.start();
+                processes.add(process);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
+        return processes;
+    }
+
+    private static void waitForProcesses(List<Process> processes) {
+        processes.forEach(process -> {
+            try {
+                int exitCode = process.waitFor();
+                if (exitCode != 0) {
+                    throw new IllegalStateException("Process exited with code " + exitCode);
                 }
-            } catch (IOException | InterruptedException e) {
+            } catch (InterruptedException | IllegalStateException e) {
                 e.printStackTrace();
             }
         });

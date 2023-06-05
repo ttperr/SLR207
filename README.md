@@ -131,4 +131,4 @@ Lors de mon étape 6, étant donné le TimeOut d'attente de sortie standard et d
 
 ## Étape 10
 
-Lors de la création des dossiers, je récupère le code de sortie afin de vérifier la bonne création. L'envoie des copies est séquentielle.
+Lors de la création des dossiers, je récupère le code de sortie afin de vérifier la bonne création. L'envoie des copies est séquentielle. Mais la phase de map ne l'est pas.
