@@ -13,6 +13,8 @@ public class SLAVE {
     private static final String HOME_DIRECTORY = "/tmp/" + USERNAME;
     private static final String MAP_DIRECTORY = HOME_DIRECTORY + "/maps";
     private static final String SHUFFLE_DIRECTORY = HOME_DIRECTORY + "/shuffles";
+    private static final String SHUFFLE_RECEIVED_DIRECTORY = HOME_DIRECTORY + "/shufflesreceived";
+    private static final String MACHINES_FILE = "machines.txt";
 
     public static void main(String[] args) {
         if (args.length < 2) {
@@ -26,10 +28,13 @@ public class SLAVE {
         System.out.println("Mode: " + mode);
         System.out.println("Input file: " + inputFile);
 
+        File machinesFile = new File(MACHINES_FILE);
+        int machineNumber = getMachineNumber(machinesFile);
+
         if (mode == 0) {
             processSplit(inputFile);
         } else if (mode == 1) {
-            processMapOutput(inputFile);
+            processMapOutput(inputFile, machineNumbers);
         } else {
             System.err.println("Mode invalide.");
         }
@@ -85,7 +90,7 @@ public class SLAVE {
         }
     }
 
-    private static void processMapOutput(String inputFile) {
+    private static void processMapOutput(String inputFile, int machineNumber) {
         try {
             // Lire le fichier UMx.txt
             BufferedReader reader = new BufferedReader(new FileReader(inputFile));
@@ -133,9 +138,34 @@ public class SLAVE {
             reader.close();
     
             System.out.println("Calcul du shuffle terminé pour le fichier " + inputFile);
+
+            // Exécution de la phase shuffle
+            runShufflePhase(machineNumber);
+
+
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private static int getMachineNumber(File machinesFile) {
+        try {
+            // Lire le fichier "machines.txt"
+            BufferedReader reader = new BufferedReader(new FileReader("machines.txt"));
+
+            int numberMachines = 0;
+
+            while ((reader.readLine()) != null) {
+                numberMachines++;
+            }
+
+            reader.close();
+
+            return numberMachines;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
     
 }
