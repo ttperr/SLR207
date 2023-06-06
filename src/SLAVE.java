@@ -5,8 +5,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 public class SLAVE {
     private static final String USERNAME = "tperrot-21";
@@ -40,15 +40,14 @@ public class SLAVE {
             // Lire le fichier split
             BufferedReader reader = new BufferedReader(new FileReader(inputFile));
 
-            // Créer la map pour stocker les mots et leur fréquence
-            Map<String, Integer> wordMap = new HashMap<>();
+            List<String> words = new ArrayList<String>();
 
             // Analyser le split et remplir la map
             String line;
             while ((line = reader.readLine()) != null) {
-                String[] words = line.split(" ");
-                for (String word : words) {
-                    wordMap.put(word, 1);
+                String[] lineWords = line.split(" ");
+                for (String word : lineWords) {
+                    words.add(word);
                 }
             }
 
@@ -73,10 +72,8 @@ public class SLAVE {
             BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
 
             // Écrire les mots et leur fréquence dans le fichier de sortie
-            for (Map.Entry<String, Integer> entry : wordMap.entrySet()) {
-                String word = entry.getKey();
-                int frequency = entry.getValue();
-                writer.write(word + ", " + frequency);
+            for (String word : words) {
+                writer.write(word + ", 1");
                 writer.newLine();
             }
 

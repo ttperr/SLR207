@@ -10,7 +10,7 @@ public class MASTER {
     private static final String HOME_DIRECTORY = "/tmp/" + USERNAME;
     private static final String SPLIT_DIRECTORY_REMOTE = HOME_DIRECTORY + "/splits";
     private static final String SPLIT_DIRECTORY = "splits";
-    private static final String SLAVE_CLASS_NAME = "SLAVE";
+    private static final String SLAVE = "SLAVE";
     private static final String MACHINES_FILE = "machines.txt";
 
     public static void main(String[] args) {
@@ -144,11 +144,12 @@ public class MASTER {
         machines.forEach(ipAddress -> {
             int machineNumber = machines.indexOf(ipAddress);
             String machine = String.format("%s@%s", USERNAME, ipAddress);
+            System.out.println("Lancement du SLAVE sur la machine " + machineNumber + ": " + ipAddress);
 
             try {
                 // Lancer le SLAVE avec les arguments appropriés
-                ProcessBuilder pb = new ProcessBuilder("ssh", machine, "java", "-cp",
-                        HOME_DIRECTORY + File.separator + "SLAVE.jar", SLAVE_CLASS_NAME, "0",
+                ProcessBuilder pb = new ProcessBuilder("ssh", machine, "java", "-jar",
+                        HOME_DIRECTORY + File.separator + SLAVE + ".jar", "0",
                         SPLIT_DIRECTORY_REMOTE + File.separator + "S" + machineNumber + ".txt");
                 Process process = pb.start();
                 processes.add(process);
