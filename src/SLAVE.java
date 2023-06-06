@@ -92,49 +92,53 @@ public class SLAVE {
         try {
             // Lire le fichier UMx.txt
             BufferedReader reader = new BufferedReader(new FileReader(inputFile));
-
+    
             // Créer le répertoire de shuffle s'il n'existe pas
             File shuffleDirectory = new File(SHUFFLE_DIRECTORY);
             shuffleDirectory.mkdirs();
-
-            // Obtenir le hash à partir de la clé ou la clef est comprise entre "/UM" et .txt
-            String beginSlice = File.separator + "UM";
-            String endSlice = ".txt";
-            String key = inputFile.substring(inputFile.indexOf(beginSlice) + beginSlice.length(),
-                    inputFile.indexOf(endSlice));
-            int hash = key.hashCode();
-
-            // Obtenir le nom de la machine
-            String hostname = InetAddress.getLocalHost().getHostName();
-
-            // Créer le nom de fichier pour la phase de shuffle
-            String outputFileName = hash + "-" + hostname + ".txt";
-            String outputFilePath = SHUFFLE_DIRECTORY + File.separator + outputFileName;
-
-            // Vérifier si le fichier existe déjà
-            File outputFile = new File(outputFilePath);
-
-            if (!outputFile.exists()) {
-                // Créer le fichier de sortie s'il n'existe pas
-                outputFile.createNewFile();
-            }
-
-            // Écrire le résultat dans le fichier de sortie
-            BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
-
-            // Écrire les mots et leur fréquence dans le fichier de sortie
+    
             String line;
             while ((line = reader.readLine()) != null) {
-                writer.write(line);
-                writer.newLine();
+                String[] keyValue = line.split(", ");
+                if (keyValue.length == 2) {
+                    String key = keyValue[0];
+                    String value = keyValue[1];
+    
+                    // Obtenir le hash à partir de la clé
+                    int hash = key.hashCode();
+    
+                    // Obtenir le nom de la machine
+                    String hostname = InetAddress.getLocalHost().getHostName();
+    
+                    // Créer le nom de fichier pour la phase de shuffle
+                    String outputFileName = hash + "-" + hostname + ".txt";
+                    String outputFilePath = SHUFFLE_DIRECTORY + File.separator + outputFileName;
+    
+                    // Vérifier si le fichier existe déjà
+                    File outputFile = new File(outputFilePath);
+    
+                    if (!outputFile.exists()) {
+                        // Créer le fichier de sortie s'il n'existe pas
+                        outputFile.createNewFile();
+                    }
+    
+                    // Écrire le résultat dans le fichier de sortie
+                    BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
+    
+                    // Écrire la clé/valeur dans le fichier de sortie
+                    writer.write(key + ", " + value);
+                    writer.newLine();
+    
+                    writer.close();
+                }
             }
-
-            writer.close();
+    
             reader.close();
-
+    
             System.out.println("Calcul du shuffle terminé pour le fichier " + inputFile);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+    
 }
