@@ -6,15 +6,20 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class SLAVE {
     private static final String USERNAME = "tperrot-21";
+
     private static final String HOME_DIRECTORY = "/tmp/" + USERNAME;
     private static final String MAP_DIRECTORY = HOME_DIRECTORY + "/maps";
     private static final String SHUFFLE_DIRECTORY = HOME_DIRECTORY + "/shuffles";
-    private static final String SHUFFLE_RECEIVED_DIRECTORY = HOME_DIRECTORY + "/shufflesreceived";
-    private static final String MACHINES_FILE = "machines.txt";
+    private static final String SHUFFLE_RECEIVED_DIRECTORY = HOME_DIRECTORY + "/shufflesreceived/";
+
+    private static final String MACHINES_FILE = HOME_DIRECTORY + File.separator + "machines.txt";
+
+    private static final HashMap<Integer, String> machines = new HashMap<Integer, String>();
 
     public static void main(String[] args) {
         if (args.length < 2) {
@@ -29,12 +34,15 @@ public class SLAVE {
         System.out.println("Input file: " + inputFile);
 
         File machinesFile = new File(MACHINES_FILE);
-        int machineNumber = getMachineNumber(machinesFile);
+        getMachines(machinesFile);
 
         if (mode == 0) {
             processSplit(inputFile);
         } else if (mode == 1) {
-            processMapOutput(inputFile, machineNumbers);
+            processMapOutput(inputFile);
+
+            // Exécution de la phase shuffle
+            processShuffleOutput();
         } else {
             System.err.println("Mode invalide.");
         }
@@ -90,82 +98,103 @@ public class SLAVE {
         }
     }
 
-    private static void processMapOutput(String inputFile, int machineNumber) {
+    private static void processMapOutput(String inputFile) {
         try {
             // Lire le fichier UMx.txt
             BufferedReader reader = new BufferedReader(new FileReader(inputFile));
-    
+
             // Créer le répertoire de shuffle s'il n'existe pas
             File shuffleDirectory = new File(SHUFFLE_DIRECTORY);
             shuffleDirectory.mkdirs();
-    
+
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] keyValue = line.split(", ");
                 if (keyValue.length == 2) {
                     String key = keyValue[0];
                     String value = keyValue[1];
-    
+
                     // Obtenir le hash à partir de la clé
                     int hash = key.hashCode();
-    
+
                     // Obtenir le nom de la machine
                     String hostname = InetAddress.getLocalHost().getHostName();
-    
+
                     // Créer le nom de fichier pour la phase de shuffle
                     String outputFileName = hash + "-" + hostname + ".txt";
                     String outputFilePath = SHUFFLE_DIRECTORY + File.separator + outputFileName;
-    
+
                     // Vérifier si le fichier existe déjà
                     File outputFile = new File(outputFilePath);
-    
+
                     if (!outputFile.exists()) {
                         // Créer le fichier de sortie s'il n'existe pas
                         outputFile.createNewFile();
                     }
-    
+
                     // Écrire le résultat dans le fichier de sortie
                     BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
-    
+
                     // Écrire la clé/valeur dans le fichier de sortie
                     writer.write(key + ", " + value);
                     writer.newLine();
-    
+
                     writer.close();
                 }
             }
-    
+
             reader.close();
-    
+
             System.out.println("Calcul du shuffle terminé pour le fichier " + inputFile);
-
-            // Exécution de la phase shuffle
-            runShufflePhase(machineNumber);
-
 
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private static int getMachineNumber(File machinesFile) {
+    private static void getMachines(File machinesFile) {
         try {
-            // Lire le fichier "machines.txt"
-            BufferedReader reader = new BufferedReader(new FileReader("machines.txt"));
+            BufferedReader reader = new BufferedReader(new FileReader(machinesFile));
 
-            int numberMachines = 0;
-
-            while ((reader.readLine()) != null) {
-                numberMachines++;
+            String line;
+            int machineNumber = 0;
+            while ((line = reader.readLine()) != null) {
+                machines.put(machineNumber, line);
+                machineNumber++;
             }
 
             reader.close();
-
-            return numberMachines;
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return 0;
     }
-    
+
+    private static void processShuffleOutput() {
+        try {
+            // Création du dossier de réception des shuffles
+            File shuffleReceivedDirectory = new File(SHUFFLE_RECEIVED_DIRECTORY);
+            shuffleReceivedDirectory.mkdirs();
+
+            // Lecture des fichiers de shuffle
+            File shuffleDirectory = new File(SHUFFLE_DIRECTORY);
+            File[] shuffleFiles = shuffleDirectory.listFiles();
+
+            for (File shuffleFile : shuffleFiles) {
+                int hash = Integer.parseInt(shuffleFile.getName().split("-")[0]);
+                int machine = hash % machines.size();
+                String ipAddress = machines.get(machine);
+
+                // Envoi du fichier de shuffle à la machine et si le dossier de réception
+                // n'existe pas, le créer
+                System.out.println("Envoi du fichier " + shuffleFile.getName() + " à la machine " + ipAddress);
+                String machineDirectory = String.format("%s@%s:%s", USERNAME, ipAddress, SHUFFLE_RECEIVED_DIRECTORY);
+
+                ProcessBuilder pb = new ProcessBuilder("scp", shuffleFile.getAbsolutePath(), machineDirectory);
+                Process p = pb.start();
+                p.waitFor();
+            }
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 }

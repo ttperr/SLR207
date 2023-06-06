@@ -141,3 +141,7 @@ Le programme ``CLEAN`` lance les commandes d'effacement de manière séquentiell
 ## Étape 10
 
 Lors de la création des dossiers, je récupère le code de sortie afin de vérifier la bonne création. L'envoie des copies est séquentielle. Mais la phase de map ne l'est pas.
+
+## Étape 11
+
+À la fin de l'étape 11, je me suis rendu compte que malgré la facilité de passer par ssh, il fallait que toutes les machines se connaissent entre elles, ce qui pouvait être très long sachant que nous sommes aussi limités par le nombre de machines disponibles en ssh. Je décide donc d'adapter mon code et d'utiliser des sockets. Cela me permet de ne pas avoir à passer par ssh et de pouvoir utiliser toutes les machines disponibles.

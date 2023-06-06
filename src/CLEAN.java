@@ -5,7 +5,9 @@ import java.util.List;
 
 public class CLEAN {
     private static final String USERNAME = "tperrot-21";
+
     private static final String REMOTE_DIR = "/tmp/" + USERNAME + "/";
+
     private static final String MACHINES_FILE = "machines.txt";
 
     public static void main(String[] args) {

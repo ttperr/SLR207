@@ -7,10 +7,15 @@ import java.util.List;
 
 public class MASTER {
     private static final String USERNAME = "tperrot-21";
+
     private static final String HOME_DIRECTORY = "/tmp/" + USERNAME;
     private static final String SPLIT_DIRECTORY_REMOTE = HOME_DIRECTORY + "/splits";
+    private static final String MAP_DIRECTORY_REMOTE = HOME_DIRECTORY + "/maps";
+
     private static final String SPLIT_DIRECTORY = "splits";
+
     private static final String SLAVE = "SLAVE";
+
     private static final String MACHINES_FILE = "machines.txt";
 
     public static void main(String[] args) {
@@ -45,6 +50,14 @@ public class MASTER {
             waitForProcesses(processesMap);
 
             System.out.println("MAP FINISHED");
+
+            // Lancer la phase de shuffle sur les machines
+            List<Process> processesShuffle = runShufflePhase(machines);
+
+            // Attendre que tous les SLAVES se terminent
+            waitForProcesses(processesShuffle);
+
+            System.out.println("SHUFFLE FINISHED");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -144,13 +157,36 @@ public class MASTER {
         machines.forEach(ipAddress -> {
             int machineNumber = machines.indexOf(ipAddress);
             String machine = String.format("%s@%s", USERNAME, ipAddress);
-            System.out.println("Lancement du SLAVE sur la machine " + machineNumber + ": " + ipAddress);
+            System.out.println("Lancement du MAP sur la machine " + machineNumber + ": " + ipAddress);
 
             try {
                 // Lancer le SLAVE avec les arguments appropriés
                 ProcessBuilder pb = new ProcessBuilder("ssh", machine, "java", "-jar",
                         HOME_DIRECTORY + File.separator + SLAVE + ".jar", "0",
                         SPLIT_DIRECTORY_REMOTE + File.separator + "S" + machineNumber + ".txt");
+                Process process = pb.start();
+                processes.add(process);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
+        return processes;
+    }
+
+    private static List<Process> runShufflePhase(List<String> machines) {
+        List<Process> processes = new ArrayList<>();
+
+        machines.forEach(ipAddress -> {
+            int machineNumber = machines.indexOf(ipAddress);
+            String machine = String.format("%s@%s", USERNAME, ipAddress);
+            System.out.println("Lancement du SHUFFLE sur la machine " + machineNumber + ": " + ipAddress);
+
+            try {
+                // Lancer le SLAVE avec les arguments appropriés
+                ProcessBuilder pb = new ProcessBuilder("ssh", machine, "java", "-jar",
+                        HOME_DIRECTORY + File.separator + SLAVE + ".jar", "1",
+                        MAP_DIRECTORY_REMOTE + File.separator + "UM" + machineNumber + ".txt");
                 Process process = pb.start();
                 processes.add(process);
             } catch (IOException e) {

@@ -6,10 +6,14 @@ import java.util.List;
 
 public class DEPLOY {
     private static final String USERNAME = "tperrot-21";
+
     private static final String REMOTE_DIR = "/tmp/" + USERNAME + "/";
+
     private static final String SRC_DIR = "src";
+
     private static final String SLAVE = "SLAVE";
     private static final String SLAVE_JAR = "SLAVE.jar";
+
     private static final String MACHINES_FILE = "machines.txt";
 
     public static void main(String[] args) {
@@ -18,7 +22,6 @@ public class DEPLOY {
             Path machinesFilePath = Path.of(MACHINES_FILE);
             List<String> machines = Files.readAllLines(machinesFilePath);
 
-
             // Création du fichier SLAVE.jar à partir de SLAVE.java et suppression de
             // SLAVE.class directement
             ProcessBuilder javacPb = new ProcessBuilder("javac", SLAVE + ".java");
@@ -26,14 +29,13 @@ public class DEPLOY {
             Process javacProcess = javacPb.start();
             int javacExitCode = javacProcess.waitFor();
 
-
-
             if (javacExitCode == 0) {
                 // La compilation s'est terminée avec succès
                 System.out.println("Compilation terminée avec succès");
 
                 // Créer le fichier JAR
-                ProcessBuilder jarPb = new ProcessBuilder("jar", "cvfe", ".." + File.separator + SLAVE_JAR, SLAVE, SLAVE + ".class");
+                ProcessBuilder jarPb = new ProcessBuilder("jar", "cvfe", ".." + File.separator + SLAVE_JAR, SLAVE,
+                        SLAVE + ".class");
                 jarPb.directory(Path.of(SRC_DIR).toFile());
                 Process jarProcess = jarPb.start();
                 int jarExitCode = jarProcess.waitFor();
@@ -125,6 +127,7 @@ public class DEPLOY {
                     e.printStackTrace();
                 }
             });
+
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }

@@ -1,6 +1,6 @@
 {
     "java.project.sourcePaths": [
-        "src/",
+        "src-ssh",
         "src"
     ],
     "java.project.referencedLibraries": [
