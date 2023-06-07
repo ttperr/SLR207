@@ -86,7 +86,7 @@ public class SLAVE {
                 while (true) {
                     line = reader.readLine();
                     System.out.println("Received: " + line);
-                    if (line == "quit") {
+                    if (line.equals("quit")) {
                         break;
                     }
                     // Execute line
@@ -94,7 +94,7 @@ public class SLAVE {
                     int code = process.waitFor();
                     System.out.println("Code: " + code);
                     // Send back done.
-                    writer.write(code);
+                    writer.write(String.valueOf(code));
                 }
                 reader.close();
                 writer.close();
