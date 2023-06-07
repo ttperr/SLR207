@@ -3,8 +3,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -25,6 +27,7 @@ public class MASTER {
 
     private static final String MACHINES_FILE = "machines.txt";
 
+    private static final String SERVER = "tp-3a101-00";
     private static final int PORT = 8888;
 
     private List<String> machines = new ArrayList<String>();
@@ -49,7 +52,7 @@ public class MASTER {
         System.out.println("Master controller started. Waiting for clients...");
 
         // Dire aux clients de se connecter
-        askClientToConnect(machines);
+        //askClientToConnect(machines);
 
         while (clients.size() < machines.size()) {
             try {
@@ -125,11 +128,11 @@ public class MASTER {
 
     private void askClientToConnect(List<String> machines) {
         machines.forEach(ipAddress -> {
-            String machineDirectory = String.format("%s@%s:%s", USERNAME, ipAddress, HOME_DIRECTORY);
+            String machine = String.format("%s@%s", USERNAME, ipAddress);
 
             try {
                 // Construire la commande SSH pour supprimer le répertoire distant
-                String command = String.format("ssh %s java -jar %s %s", machineDirectory, SLAVE + ".jar", 9, ipAddress, PORT);
+                String command = String.format("ssh %s java -jar %s %s %s %s", machine, HOME_DIRECTORY + File.separator + SLAVE + ".jar", 9, SERVER, PORT);
 
                 // Exécuter la commande à distance
                 Runtime.getRuntime().exec(command);
