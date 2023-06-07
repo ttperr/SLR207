@@ -29,7 +29,7 @@ public class SLAVE {
 
     public static void main(String[] args) throws NumberFormatException, InterruptedException {
         if (args.length > 3) {
-            System.err.println("Usage: java SLAVE <mode> <inputFile || serverAddress> <port>");
+            System.err.println("Usage: java -jar SLAVE.jar <mode> <inputFile || serverAddress> <port>");
             return;
         }
 
@@ -54,7 +54,7 @@ public class SLAVE {
             processReduceOutput();
         } else {
             System.err.println("Invalid mode.");
-            System.err.println("Usage: java SLAVE <mode>");
+            System.err.println("Usage: java -jar SLAVE.jar <mode>");
             return;
         }
     }
@@ -67,28 +67,34 @@ public class SLAVE {
             processShuffleOutput();
         } else {
             System.err.println("Invalid mode.");
-            System.err.println("Usage: java SLAVE <mode> <inputFile>");
+            System.err.println("Usage: java -jar SLAVE.jar <mode> <inputFile>");
             return;
         }
     }
 
     public SLAVE(int mode, String serverAddress, int port) throws InterruptedException {
         if (mode == 9) {
+            System.out.println("Connecting to " + serverAddress + " on port " + port);
             try {
                 clientSocket = new Socket(serverAddress, port);
                 reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
 
+                System.out.println("Connected to " + serverAddress + " on port " + port);
+
                 String line;
                 while (true) {
                     line = reader.readLine();
+                    System.out.println("Received: " + line);
                     if (line == "quit") {
                         break;
                     }
                     // Execute line
-                    ProcessBuilder pb = new ProcessBuilder(line.split(" "));
-                    Process p = pb.start();
-                    p.waitFor();
+                    Process process = Runtime.getRuntime().exec(line);
+                    int code = process.waitFor();
+                    System.out.println("Code: " + code);
+                    // Send back done.
+                    writer.write(code);
                 }
                 reader.close();
                 writer.close();
@@ -98,7 +104,7 @@ public class SLAVE {
             }
         } else {
             System.err.println("Invalid mode.");
-            System.err.println("Usage: java SLAVE <mode> <serverAddress> <port>");
+            System.err.println("Usage: java -jar SLAVE.jar <mode> <serverAddress> <port>");
             return;
         }
     }

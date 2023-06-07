@@ -9,7 +9,7 @@ public class DEPLOY {
 
     private static final String REMOTE_DIR = "/tmp/" + USERNAME + "/";
 
-    private static final String SRC_DIR = "src";
+    private static final String SRC_DIR = "src-serv";
 
     private static final String SLAVE = "SLAVE";
     private static final String SLAVE_JAR = "SLAVE.jar";

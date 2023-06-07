@@ -3,10 +3,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -27,7 +25,7 @@ public class MASTER {
 
     private static final String MACHINES_FILE = "machines.txt";
 
-    private static final String SERVER = "tp-3a101-00";
+    private static final String SERVER = "tp-3a101-00.enst.fr";
     private static final int PORT = 8888;
 
     private List<String> machines = new ArrayList<String>();
@@ -49,7 +47,15 @@ public class MASTER {
         // Lire le fichier "machines.txt"
         getMachines(MACHINES_FILE);
 
-        System.out.println("Master controller started. Waiting for clients...");
+        // Copier le fichier machines.txt vers les machines
+        List<Process> processesCopyMachines = copyMachinesFile(machines);
+
+        // Attendre que toutes les copies se terminent
+        assert processesCopyMachines != null;
+        waitForProcesses(processesCopyMachines);
+        System.out.println("Copie du fichier machines.txt effectuée.");
+
+        System.out.println("Waiting for clients...");
 
         // Dire aux clients de se connecter
         //askClientToConnect(machines);
@@ -57,6 +63,8 @@ public class MASTER {
         while (clients.size() < machines.size()) {
             try {
                 Socket clientSocket = serverSocket.accept();
+
+                System.out.println("Client connected: " + clientSocket.getInetAddress().getHostName());
 
                 // Crée un thread pour gérer la communication avec le client
                 ClientHandler clientHandler = new ClientHandler(clientSocket, machines);
@@ -73,6 +81,8 @@ public class MASTER {
         createSplitDirectoryOnMachines(clients);
         waitForCommand(clients);
 
+        System.out.println("Répertoires créés sur les machines.");
+
         // Copier les fichiers de splits vers les machines
         List<Process> processesSplit = copySplitsToMachines(machines);
 
@@ -80,14 +90,6 @@ public class MASTER {
         assert processesSplit != null;
         waitForProcesses(processesSplit);
         System.out.println("Copie des splits sur les machines effectuée.");
-
-        // Copier le fichier machines.txt vers les machines
-        List<Process> processesCopyMachines = copyMachinesFile(machines);
-
-        // Attendre que toutes les copies se terminent
-        assert processesCopyMachines != null;
-        waitForProcesses(processesCopyMachines);
-        System.out.println("Copie du fichier machines.txt effectuée.");
 
         // Lancer la phase de map sur les machines
         runMapPhase(clients);
@@ -132,7 +134,7 @@ public class MASTER {
 
             try {
                 // Construire la commande SSH pour supprimer le répertoire distant
-                String command = String.format("ssh %s java -jar %s %s %s %s", machine, HOME_DIRECTORY + File.separator + SLAVE + ".jar", 9, SERVER, PORT);
+                String command = String.format("ssh %s xjava -jar %s %s %s %s", machine, HOME_DIRECTORY + File.separator + SLAVE + ".jar", 9, SERVER, PORT);
 
                 // Exécuter la commande à distance
                 Runtime.getRuntime().exec(command);
@@ -319,10 +321,7 @@ public class MASTER {
 
     private void waitForCommand(List<ClientHandler> clients) {
         clients.forEach(client -> {
-            int exitCode = client.waitForResponse();
-            if (exitCode != 0) {
-                throw new IllegalStateException("Process exited with code " + exitCode);
-            }
+            client.run();
         });
     }
 
@@ -348,10 +347,11 @@ public class MASTER {
         public void run() {
             try {
                 String clientMessage;
+                System.out.println("waiting for message");
                 while ((clientMessage = in.readLine()) != null) {
                     System.out.println("Received: " + clientMessage);
-                    out.println(clientMessage);
                 }
+                System.out.println("done");
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -364,20 +364,6 @@ public class MASTER {
         // Send a command to the client
         public void sendCommand(String command) {
             out.println(command);
-        }
-
-        // Wait for responses from the client
-        public int waitForResponse() {
-            try {
-                String clientMessage;
-                while ((clientMessage = in.readLine()) != null) {
-                    System.out.println("Received: " + clientMessage);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-                return 1;
-            }
-            return 0;
         }
 
         public void close() {
