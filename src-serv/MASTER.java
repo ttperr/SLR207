@@ -1,5 +1,10 @@
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -18,11 +23,42 @@ public class MASTER {
 
     private static final String MACHINES_FILE = "machines.txt";
 
-    private static List<String> machines = new ArrayList<String>();// contiendra tous les flux de sortie vers les clients
+    private static final int PORT = 8080;
 
-    public static void main(String[] args) {
+    private List<String> machines = new ArrayList<String>();// contiendra tous les flux de sortie vers les clients
+
+    private ServerSocket serverSocket;
+    private List<Socket> clients;
+
+    public MASTER() {
+        clients = new ArrayList<>();
+
+        try {
+            serverSocket = new ServerSocket(PORT);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void start() {
         // Lire le fichier "machines.txt"
         getMachines(MACHINES_FILE);
+
+        System.out.println("Master controller started. Waiting for clients...");
+
+        while (true) {
+            try {
+                Socket clientSocket = serverSocket.accept();
+                clients.add(clientSocket);
+                
+                // Crée un thread pour gérer la communication avec le client
+                ClientHandler clientHandler = new ClientHandler(clientSocket);
+                clientHandler.start();
+                
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 
         // Créer les répertoires sur les machines
         createSplitDirectoryOnMachines(machines);
@@ -58,9 +94,11 @@ public class MASTER {
         waitForProcesses(processesShuffle);
 
         System.out.println("SHUFFLE FINISHED");
+
+        
     }
 
-    private static void getMachines(String machinesFile) {
+    private void getMachines(String machinesFile) {
         try {
             // Lire le fichier "machines.txt"
             Path machinesFilePath = Path.of(machinesFile);
@@ -70,7 +108,7 @@ public class MASTER {
         }
     }
 
-    private static void createSplitDirectoryOnMachines(List<String> machines) {
+    private void createSplitDirectoryOnMachines(List<String> machines) {
         machines.forEach(ipAddress -> {
             int machineNumber = machines.indexOf(ipAddress);
             String machine = String.format("%s@%s", USERNAME, ipAddress);
@@ -93,7 +131,7 @@ public class MASTER {
         });
     }
 
-    private static List<Process> copySplitsToMachines(List<String> machines) {
+    private List<Process> copySplitsToMachines(List<String> machines) {
         // Check if there is a splits directory
         File splitsDirectory = new File(SPLIT_DIRECTORY);
         if (!splitsDirectory.exists()) {
@@ -137,7 +175,7 @@ public class MASTER {
         return processes;
     }
 
-    private static List<Process> copyMachinesFile(List<String> machines) {
+    private List<Process> copyMachinesFile(List<String> machines) {
         List<Process> processes = new ArrayList<>();
 
         machines.forEach(ipAddress -> {
@@ -158,7 +196,7 @@ public class MASTER {
         return processes;
     }
 
-    private static List<Process> runMapPhase(List<String> machines) {
+    private List<Process> runMapPhase(List<String> machines) {
         List<Process> processes = new ArrayList<>();
 
         machines.forEach(ipAddress -> {
@@ -181,7 +219,7 @@ public class MASTER {
         return processes;
     }
 
-    private static List<Process> runShufflePhase(List<String> machines) {
+    private List<Process> runShufflePhase(List<String> machines) {
         List<Process> processes = new ArrayList<>();
 
         machines.forEach(ipAddress -> {
@@ -204,7 +242,7 @@ public class MASTER {
         return processes;
     }
 
-    private static void waitForProcesses(List<Process> processes) {
+    private void waitForProcesses(List<Process> processes) {
         processes.forEach(process -> {
             try {
                 int exitCode = process.waitFor();
@@ -215,5 +253,37 @@ public class MASTER {
                 e.printStackTrace();
             }
         });
+    }
+
+
+    private class ClientHandler extends Thread {
+        private final Socket clientSocket;
+        private final BufferedReader in;
+        private final PrintWriter out;
+
+        public ClientHandler(Socket socket) throws IOException {
+            this.clientSocket = socket;
+            this.in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            this.out = new PrintWriter(clientSocket.getOutputStream(), true);
+        }
+
+        @Override
+        public void run() {
+            try {
+                String clientMessage;
+                while ((clientMessage = in.readLine()) != null) {
+                    System.out.println("Received: " + clientMessage);
+                    out.println(clientMessage);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+    public static void main(String[] args) {
+        MASTER master = new MASTER();
+        master.start();
     }
 }
