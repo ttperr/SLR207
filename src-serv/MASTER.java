@@ -25,7 +25,7 @@ public class MASTER {
 
     private static final String MACHINES_FILE = "machines.txt";
 
-    private static final int PORT = 8080;
+    private static final int PORT = 8888;
 
     private List<String> machines = new ArrayList<String>();
 
@@ -48,14 +48,17 @@ public class MASTER {
 
         System.out.println("Master controller started. Waiting for clients...");
 
+        // Dire aux clients de se connecter
+        askClientToConnect(machines);
+
         while (clients.size() < machines.size()) {
             try {
                 Socket clientSocket = serverSocket.accept();
-                
+
                 // Crée un thread pour gérer la communication avec le client
                 ClientHandler clientHandler = new ClientHandler(clientSocket, machines);
                 clients.add(clientHandler);
-                
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -64,7 +67,8 @@ public class MASTER {
         System.out.println("All clients connected. Starting map phase...");
 
         // Créer les répertoires sur les machines
-        createSplitDirectoryOnMachines(machines);
+        createSplitDirectoryOnMachines(clients);
+        waitForCommand(clients);
 
         // Copier les fichiers de splits vers les machines
         List<Process> processesSplit = copySplitsToMachines(machines);
@@ -83,25 +87,25 @@ public class MASTER {
         System.out.println("Copie du fichier machines.txt effectuée.");
 
         // Lancer la phase de map sur les machines
-        List<Process> processesMap = runMapPhase(machines);
+        runMapPhase(clients);
 
         // Attendre que tous les SLAVES se terminent
-        waitForProcesses(processesMap);
+        waitForCommand(clients);
 
         System.out.println("MAP FINISHED");
 
         // Lancer la phase de shuffle sur les machines
-        List<Process> processesShuffle = runShufflePhase(machines);
+        runShufflePhase(clients);
 
         // Attendre que tous les SLAVES se terminent
-        waitForProcesses(processesShuffle);
+        waitForCommand(clients);
         System.out.println("SHUFFLE FINISHED");
 
         // Lancer la phase reduce sur les machines
-        List<Process> processesReduce = runReducePhase(machines);
+        runReducePhase(clients);
 
         // Attendre que tous les SLAVES se terminent
-        waitForProcesses(processesReduce);
+        waitForCommand(clients);
         System.out.println("REDUCE FINISHED");
 
         // Copier les fichiers de reduce vers la machine locale
@@ -119,6 +123,23 @@ public class MASTER {
         clients.forEach(ClientHandler::close);
     }
 
+    private void askClientToConnect(List<String> machines) {
+        machines.forEach(ipAddress -> {
+            String machineDirectory = String.format("%s@%s:%s", USERNAME, ipAddress, HOME_DIRECTORY);
+
+            try {
+                // Construire la commande SSH pour supprimer le répertoire distant
+                String command = String.format("ssh %s java -jar %s %s", machineDirectory, SLAVE + ".jar", 9, ipAddress, PORT);
+
+                // Exécuter la commande à distance
+                Runtime.getRuntime().exec(command);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
     private void getMachines(String machinesFile) {
         try {
             // Lire le fichier "machines.txt"
@@ -129,27 +150,11 @@ public class MASTER {
         }
     }
 
-    private void createSplitDirectoryOnMachines(List<String> machines) {
-        machines.forEach(ipAddress -> {
-            int machineNumber = machines.indexOf(ipAddress);
-            String machine = String.format("%s@%s", USERNAME, ipAddress);
-
-            try {
-                // Créer le répertoire sur la machine distante
-                ProcessBuilder pb = new ProcessBuilder("ssh", machine, "mkdir", "-p", SPLIT_DIRECTORY_REMOTE);
-                Process process = pb.start();
-                int exitCode = process.waitFor();
-
-                if (exitCode == 0) {
-                    System.out.println("Répertoire créé sur la machine " + machineNumber + ": " + ipAddress);
-                } else {
-                    System.err.println("Erreur lors de la création du répertoire sur la machine " + machineNumber + ": "
-                            + ipAddress);
-                }
-            } catch (IOException | InterruptedException e) {
-                e.printStackTrace();
-            }
+    private void createSplitDirectoryOnMachines(List<ClientHandler> clients) {
+        clients.forEach(client -> {
+            client.sendCommand("mkdir -p " + SPLIT_DIRECTORY_REMOTE);
         });
+
     }
 
     private List<Process> copySplitsToMachines(List<String> machines) {
@@ -217,75 +222,31 @@ public class MASTER {
         return processes;
     }
 
-    private List<Process> runMapPhase(List<String> machines) {
-        List<Process> processes = new ArrayList<>();
-
-        machines.forEach(ipAddress -> {
-            int machineNumber = machines.indexOf(ipAddress);
-            String machine = String.format("%s@%s", USERNAME, ipAddress);
-            System.out.println("Lancement du MAP sur la machine " + machineNumber + ": " + ipAddress);
-
-            try {
-                // Lancer le SLAVE avec les arguments appropriés
-                ProcessBuilder pb = new ProcessBuilder("ssh", machine, "java", "-jar",
-                        HOME_DIRECTORY + File.separator + SLAVE + ".jar", "0",
-                        SPLIT_DIRECTORY_REMOTE + File.separator + "S" + machineNumber + ".txt");
-                Process process = pb.start();
-                processes.add(process);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+    private void runMapPhase(List<ClientHandler> clients) {
+        clients.forEach(client -> {
+            client.sendCommand("java " + "-jar " +
+                    HOME_DIRECTORY + File.separator + SLAVE + ".jar " + "0 " +
+                    SPLIT_DIRECTORY_REMOTE + File.separator + "S" + client.getMachineId() + ".txt");
         });
-
-        return processes;
     }
 
-    private List<Process> runShufflePhase(List<String> machines) {
-        List<Process> processes = new ArrayList<>();
-
-        machines.forEach(ipAddress -> {
-            int machineNumber = machines.indexOf(ipAddress);
-            String machine = String.format("%s@%s", USERNAME, ipAddress);
-            System.out.println("Lancement du SHUFFLE sur la machine " + machineNumber + ": " + ipAddress);
-
-            try {
-                // Lancer le SLAVE avec les arguments appropriés
-                ProcessBuilder pb = new ProcessBuilder("ssh", machine, "java", "-jar",
-                        HOME_DIRECTORY + File.separator + SLAVE + ".jar", "1",
-                        MAP_DIRECTORY_REMOTE + File.separator + "UM" + machineNumber + ".txt");
-                Process process = pb.start();
-                processes.add(process);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+    private void runShufflePhase(List<ClientHandler> clients) {
+        clients.forEach(client -> {
+            client.sendCommand("java " + "-jar " +
+                    HOME_DIRECTORY + File.separator + SLAVE + ".jar " + "1 " +
+                    MAP_DIRECTORY_REMOTE + File.separator + "UM" + client.getMachineId() + ".txt");
         });
 
-        return processes;
     }
 
-    private static List<Process> runReducePhase(List<String> machines) {
-        List<Process> processes = new ArrayList<>();
-
-        machines.forEach(ipAddress -> {
-            int machineNumber = machines.indexOf(ipAddress);
-            String machine = String.format("%s@%s", USERNAME, ipAddress);
-            System.out.println("Lancement du REDUCE sur la machine " + machineNumber + ": " + ipAddress);
-
-            try {
-                // Lancer le SLAVE avec les arguments appropriés
-                ProcessBuilder pb = new ProcessBuilder("ssh", machine, "java", "-jar",
-                        HOME_DIRECTORY + File.separator + SLAVE + ".jar", "2");
-                Process process = pb.start();
-                processes.add(process);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+    private void runReducePhase(List<ClientHandler> clients) {
+        clients.forEach(client -> {
+            client.sendCommand("java " + "-jar " +
+                    HOME_DIRECTORY + File.separator + SLAVE + ".jar " + "2");
         });
-
-        return processes;
     }
 
-    private static List<Process> runResultPhase(List<String> machines) {
+    private List<Process> runResultPhase(List<String> machines) {
         List<Process> processes = new ArrayList<>();
 
         machines.forEach(ipAddress -> {
@@ -306,7 +267,7 @@ public class MASTER {
         return processes;
     }
 
-    private static void mergeResults() {
+    private void mergeResults() {
         try {
             // Check if there is a results directory
             File resultsDirectory = new File(RESULT_DIRECTORY);
@@ -353,6 +314,14 @@ public class MASTER {
         });
     }
 
+    private void waitForCommand(List<ClientHandler> clients) {
+        clients.forEach(client -> {
+            int exitCode = client.waitForResponse();
+            if (exitCode != 0) {
+                throw new IllegalStateException("Process exited with code " + exitCode);
+            }
+        });
+    }
 
     private class ClientHandler extends Thread {
         private final Socket clientSocket;
@@ -365,10 +334,10 @@ public class MASTER {
             this.clientSocket = socket;
             this.in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             this.out = new PrintWriter(clientSocket.getOutputStream(), true);
-            this.ipAddress = socket.getInetAddress().getHostAddress();
+            this.ipAddress = socket.getInetAddress().getHostName();
             this.machineId = authorizedMachines.indexOf(ipAddress);
             if (machineId == -1) {
-                throw new IOException("Unauthorized machine");
+                throw new IOException("Unauthorized machine: " + ipAddress);
             }
         }
 
@@ -385,17 +354,41 @@ public class MASTER {
             }
         }
 
+        public int getMachineId() {
+            return machineId;
+        }
+
+        // Send a command to the client
+        public void sendCommand(String command) {
+            out.println(command);
+        }
+
+        // Wait for responses from the client
+        public int waitForResponse() {
+            try {
+                String clientMessage;
+                while ((clientMessage = in.readLine()) != null) {
+                    System.out.println("Received: " + clientMessage);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                return 1;
+            }
+            return 0;
+        }
+
         public void close() {
             try {
+                sendCommand("quit");
+                in.close();
+                out.close();
                 clientSocket.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
-
     }
-
 
     public static void main(String[] args) {
         MASTER master = new MASTER();
