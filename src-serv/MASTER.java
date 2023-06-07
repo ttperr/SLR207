@@ -16,8 +16,10 @@ public class MASTER {
     private static final String HOME_DIRECTORY = "/tmp/" + USERNAME;
     private static final String SPLIT_DIRECTORY_REMOTE = HOME_DIRECTORY + "/splits";
     private static final String MAP_DIRECTORY_REMOTE = HOME_DIRECTORY + "/maps";
+    private static final String REDUCES_DIRECTORY_REMOTE = HOME_DIRECTORY + "/reduces";
 
     private static final String SPLIT_DIRECTORY = "splits";
+    private static final String RESULT_DIRECTORY = "results";
 
     private static final String SLAVE = "SLAVE";
 
@@ -25,10 +27,10 @@ public class MASTER {
 
     private static final int PORT = 8080;
 
-    private List<String> machines = new ArrayList<String>();// contiendra tous les flux de sortie vers les clients
+    private List<String> machines = new ArrayList<String>();
 
     private ServerSocket serverSocket;
-    private List<Socket> clients;
+    private List<ClientHandler> clients; // Liste des clients connectés
 
     public MASTER() {
         clients = new ArrayList<>();
@@ -46,19 +48,20 @@ public class MASTER {
 
         System.out.println("Master controller started. Waiting for clients...");
 
-        while (true) {
+        while (clients.size() < machines.size()) {
             try {
                 Socket clientSocket = serverSocket.accept();
-                clients.add(clientSocket);
                 
                 // Crée un thread pour gérer la communication avec le client
-                ClientHandler clientHandler = new ClientHandler(clientSocket);
-                clientHandler.start();
+                ClientHandler clientHandler = new ClientHandler(clientSocket, machines);
+                clients.add(clientHandler);
                 
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+
+        System.out.println("All clients connected. Starting map phase...");
 
         // Créer les répertoires sur les machines
         createSplitDirectoryOnMachines(machines);
@@ -92,10 +95,28 @@ public class MASTER {
 
         // Attendre que tous les SLAVES se terminent
         waitForProcesses(processesShuffle);
-
         System.out.println("SHUFFLE FINISHED");
 
-        
+        // Lancer la phase reduce sur les machines
+        List<Process> processesReduce = runReducePhase(machines);
+
+        // Attendre que tous les SLAVES se terminent
+        waitForProcesses(processesReduce);
+        System.out.println("REDUCE FINISHED");
+
+        // Copier les fichiers de reduce vers la machine locale
+        List<Process> processesResults = runResultPhase(machines);
+
+        // Attendre que tous les SCP se terminent
+        waitForProcesses(processesResults);
+        System.out.println("Résultats récupérés.");
+
+        // Merge les résultats
+        mergeResults();
+        System.out.println("Résultats fusionnés et présents dans result.txt");
+
+        // Ferme tous les clients
+        clients.forEach(ClientHandler::close);
     }
 
     private void getMachines(String machinesFile) {
@@ -242,6 +263,83 @@ public class MASTER {
         return processes;
     }
 
+    private static List<Process> runReducePhase(List<String> machines) {
+        List<Process> processes = new ArrayList<>();
+
+        machines.forEach(ipAddress -> {
+            int machineNumber = machines.indexOf(ipAddress);
+            String machine = String.format("%s@%s", USERNAME, ipAddress);
+            System.out.println("Lancement du REDUCE sur la machine " + machineNumber + ": " + ipAddress);
+
+            try {
+                // Lancer le SLAVE avec les arguments appropriés
+                ProcessBuilder pb = new ProcessBuilder("ssh", machine, "java", "-jar",
+                        HOME_DIRECTORY + File.separator + SLAVE + ".jar", "2");
+                Process process = pb.start();
+                processes.add(process);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
+        return processes;
+    }
+
+    private static List<Process> runResultPhase(List<String> machines) {
+        List<Process> processes = new ArrayList<>();
+
+        machines.forEach(ipAddress -> {
+            String machineDirectory = String.format("%s@%s:%s", USERNAME, ipAddress, REDUCES_DIRECTORY_REMOTE);
+
+            try {
+                // Copier le fichier sur la machine distante
+                ProcessBuilder pb = new ProcessBuilder("scp", "-r",
+                        machineDirectory, RESULT_DIRECTORY);
+                Process process = pb.start();
+                processes.add(process);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
+        return processes;
+    }
+
+    private static void mergeResults() {
+        try {
+            // Check if there is a results directory
+            File resultsDirectory = new File(RESULT_DIRECTORY);
+            if (!resultsDirectory.exists()) {
+                System.err.println("Le répertoire " + RESULT_DIRECTORY + " n'existe pas.");
+                return;
+            }
+
+            // Check if there are files in the results directory
+            File[] resultFiles = resultsDirectory.listFiles();
+
+            if (resultFiles == null || resultFiles.length == 0) {
+                System.err.println("Le répertoire " + RESULT_DIRECTORY + " est vide.");
+                return;
+            }
+
+            // Merge the files
+            ProcessBuilder pb = new ProcessBuilder("cat", RESULT_DIRECTORY + File.separator + "*.txt", ">",
+                    RESULT_DIRECTORY + File.separator + "result.txt");
+            Process process = pb.start();
+            int exitCode = process.waitFor();
+
+            if (exitCode == 0) {
+                System.out.println("Fusion des résultats effectuée.");
+            } else {
+                System.err.println("Erreur lors de la fusion des résultats.");
+            }
+
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void waitForProcesses(List<Process> processes) {
         processes.forEach(process -> {
             try {
@@ -258,13 +356,20 @@ public class MASTER {
 
     private class ClientHandler extends Thread {
         private final Socket clientSocket;
-        private final BufferedReader in;
-        private final PrintWriter out;
+        private final BufferedReader in; // receive 0 if the command went well, the error otherwise
+        private final PrintWriter out; // send all the commands to the client
+        private final int machineId;
+        private final String ipAddress;
 
-        public ClientHandler(Socket socket) throws IOException {
+        public ClientHandler(Socket socket, List<String> authorizedMachines) throws IOException {
             this.clientSocket = socket;
             this.in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             this.out = new PrintWriter(clientSocket.getOutputStream(), true);
+            this.ipAddress = socket.getInetAddress().getHostAddress();
+            this.machineId = authorizedMachines.indexOf(ipAddress);
+            if (machineId == -1) {
+                throw new IOException("Unauthorized machine");
+            }
         }
 
         @Override
@@ -279,6 +384,16 @@ public class MASTER {
                 e.printStackTrace();
             }
         }
+
+        public void close() {
+            try {
+                clientSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+
     }
 
 

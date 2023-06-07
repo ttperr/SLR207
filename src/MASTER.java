@@ -20,7 +20,8 @@ public class MASTER {
 
     private static final String MACHINES_FILE = "machines.txt";
 
-    private static List<String> machines = new ArrayList<String>();// contiendra tous les flux de sortie vers les clients
+    private static List<String> machines = new ArrayList<String>();// contiendra tous les flux de sortie vers les
+                                                                   // clients
 
     public static void main(String[] args) {
         // Lire le fichier "machines.txt"
@@ -56,28 +57,34 @@ public class MASTER {
         // Lancer la phase de shuffle sur les machines
         List<Process> processesShuffle = runShufflePhase(machines);
 
-            // Attendre que tous les SLAVES se terminent
-            waitForProcesses(processesShuffle);
-            System.out.println("SHUFFLE FINISHED");
+        // Attendre que tous les SLAVES se terminent
+        waitForProcesses(processesShuffle);
+        System.out.println("SHUFFLE FINISHED");
 
-            // Lancer la phase reduce sur les machines
-            List<Process> processesReduce = runReducePhase(machines);
+        // Lancer la phase reduce sur les machines
+        List<Process> processesReduce = runReducePhase(machines);
 
-            // Attendre que tous les SLAVES se terminent
-            waitForProcesses(processesReduce);
-            System.out.println("REDUCE FINISHED");
+        // Attendre que tous les SLAVES se terminent
+        waitForProcesses(processesReduce);
+        System.out.println("REDUCE FINISHED");
 
-            // Copier les fichiers de reduce vers la machine locale
-            List<Process> processesResults = runResultPhase(machines);
+        // Copier les fichiers de reduce vers la machine locale
+        List<Process> processesResults = runResultPhase(machines);
 
-            // Attendre que tous les SCP se terminent
-            waitForProcesses(processesResults);
-            System.out.println("Résultats récupérés.");
+        // Attendre que tous les SCP se terminent
+        waitForProcesses(processesResults);
+        System.out.println("Résultats récupérés.");
 
-            // Merge les résultats
-            mergeResults();
-            System.out.println("Résultats fusionnés et présents dans result.txt");
+        // Merge les résultats
+        mergeResults();
+        System.out.println("Résultats fusionnés et présents dans result.txt");
+    }
 
+    private static void getMachines(String machinesFile) {
+        try {
+            // Lire le fichier "machines.txt"
+            Path machinesFilePath = Path.of(machinesFile);
+            machines = Files.readAllLines(machinesFilePath);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -278,7 +285,8 @@ public class MASTER {
             }
 
             // Merge the files
-            ProcessBuilder pb = new ProcessBuilder("cat", RESULT_DIRECTORY + File.separator + "*.txt", ">", RESULT_DIRECTORY + File.separator + "result.txt");
+            ProcessBuilder pb = new ProcessBuilder("cat", RESULT_DIRECTORY + File.separator + "*.txt", ">",
+                    RESULT_DIRECTORY + File.separator + "result.txt");
             Process process = pb.start();
             int exitCode = process.waitFor();
 
