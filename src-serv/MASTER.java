@@ -349,6 +349,7 @@ public class MASTER {
                 String clientMessage;
                 System.out.println("waiting for message");
                 while ((clientMessage = in.readLine()) != null) {
+                    System.out.println("waiting for message");
                     System.out.println("Received: " + clientMessage);
                 }
                 System.out.println("done");

@@ -95,6 +95,7 @@ public class SLAVE {
                     System.out.println("Code: " + code);
                     // Send back done.
                     writer.write(String.valueOf(code));
+                    writer.flush();
                 }
                 reader.close();
                 writer.close();
