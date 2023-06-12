@@ -255,7 +255,7 @@ public class MASTER {
             try {
                 // Copier le fichier sur la machine distante
                 ProcessBuilder pb = new ProcessBuilder("scp", "-r",
-                        machineDirectory, RESULT_DIRECTORY);
+                        machineDirectory, RESULT_DIRECTORY + File.separator);
                 Process process = pb.start();
                 processes.add(process);
 

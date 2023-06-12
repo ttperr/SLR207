@@ -123,6 +123,10 @@ public class DEPLOY {
                                 "Échec de la connexion SSH sur la machine " + machineNumber + ": " + ipAddress);
                         return;
                     }
+
+                    if (machineNumber % 10 == 0) {
+                        Thread.sleep(60000);
+                    }
                 } catch (IOException | InterruptedException e) {
                     e.printStackTrace();
                 }

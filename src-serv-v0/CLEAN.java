@@ -10,6 +10,8 @@ public class CLEAN {
 
     private static final String MACHINES_FILE = "machines.txt";
 
+    private static final String RESULT_DIRECTORY = "results";
+
     public static void main(String[] args) {
         try {
             // Lire le fichier "machines.txt"
@@ -37,10 +39,19 @@ public class CLEAN {
                         System.err.println("Erreur lors de la suppression du répertoire sur la machine " + machineNumber
                                 + ": " + ipAddress);
                     }
+
+                    if (machineNumber % 10 == 0) {
+                        Thread.sleep(60000);
+                    }
                 } catch (IOException | InterruptedException e) {
                     e.printStackTrace();
                 }
             });
+
+            // Suppression du dossier results
+            Runtime.getRuntime().exec("rm -rf " + RESULT_DIRECTORY);
+
+            System.out.println("\nNettoyage terminé");
         } catch (IOException e) {
             e.printStackTrace();
         }

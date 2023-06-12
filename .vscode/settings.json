@@ -1,8 +1,8 @@
 {
     "java.project.sourcePaths": [
-        "src-ssh",
+        "src-serv-v0",
         "src",
-        "src-serv"
+        "src-serv-v1"
     ],
     "java.project.referencedLibraries": [
         "lib/**/*.jar",

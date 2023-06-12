@@ -58,7 +58,7 @@ public class MASTER {
         System.out.println("Waiting for clients...");
 
         // Dire aux clients de se connecter
-        //askClientToConnect(machines);
+        askClientToConnect(machines);
 
         while (clients.size() < machines.size()) {
             try {
@@ -113,6 +113,7 @@ public class MASTER {
         waitForCommand(clients);
         System.out.println("REDUCE FINISHED");
 
+        /*****************  RÉCUPÉRATION DE RÉSULTATS *****************
         // Copier les fichiers de reduce vers la machine locale
         List<Process> processesResults = runResultPhase(machines);
 
@@ -123,9 +124,11 @@ public class MASTER {
         // Merge les résultats
         mergeResults();
         System.out.println("Résultats fusionnés et présents dans result.txt");
-
+        */
         // Ferme tous les clients
         clients.forEach(ClientHandler::close);
+        System.out.println("Finished.");
+        
     }
 
     private void askClientToConnect(List<String> machines) {
@@ -134,7 +137,7 @@ public class MASTER {
 
             try {
                 // Construire la commande SSH pour supprimer le répertoire distant
-                String command = String.format("ssh %s xjava -jar %s %s %s %s", machine, HOME_DIRECTORY + File.separator + SLAVE + ".jar", 9, SERVER, PORT);
+                String command = String.format("ssh %s java -jar %s %s %s %s", machine, HOME_DIRECTORY + File.separator + SLAVE + ".jar", 9, SERVER, PORT);
 
                 // Exécuter la commande à distance
                 Runtime.getRuntime().exec(command);
@@ -260,7 +263,7 @@ public class MASTER {
             try {
                 // Copier le fichier sur la machine distante
                 ProcessBuilder pb = new ProcessBuilder("scp", "-r",
-                        machineDirectory, RESULT_DIRECTORY);
+                        machineDirectory, RESULT_DIRECTORY + File.separator);
                 Process process = pb.start();
                 processes.add(process);
 
@@ -290,18 +293,10 @@ public class MASTER {
             }
 
             // Merge the files
-            ProcessBuilder pb = new ProcessBuilder("cat", RESULT_DIRECTORY + File.separator + "*.txt", ">",
-                    RESULT_DIRECTORY + File.separator + "result.txt");
-            Process process = pb.start();
-            int exitCode = process.waitFor();
+            Runtime.getRuntime().exec("cat " + RESULT_DIRECTORY + "/*.txt > " + RESULT_DIRECTORY + "/result.txt");
+            System.out.println("Fusion des résultats effectuée.");
 
-            if (exitCode == 0) {
-                System.out.println("Fusion des résultats effectuée.");
-            } else {
-                System.err.println("Erreur lors de la fusion des résultats.");
-            }
-
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -347,12 +342,14 @@ public class MASTER {
         public void run() {
             try {
                 String clientMessage;
-                System.out.println("waiting for message");
                 while ((clientMessage = in.readLine()) != null) {
-                    System.out.println("waiting for message");
-                    System.out.println("Received: " + clientMessage);
+                    if (clientMessage.equals("0")) {
+                        break;
+                    } else {
+                        System.err.println("Error on machine " + machineId + ": " + ipAddress);
+                    }
                 }
-                System.out.println("done");
+                System.out.println("done for machine " + machineId + ": " + ipAddress);
             } catch (IOException e) {
                 e.printStackTrace();
             }

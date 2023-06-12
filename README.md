@@ -147,3 +147,7 @@ Lors de la création des dossiers, je récupère le code de sortie afin de véri
 À la fin de l'étape 11, je me suis rendu compte que malgré la facilité de passer par ssh, il fallait que toutes les machines se connaissent entre elles, ce qui pouvait être très long sachant que nous sommes aussi limités par le nombre de machines disponibles en ssh. Je décide donc d'adapter mon code et d'utiliser des sockets. Cela me permet de ne pas avoir à passer par ssh et de pouvoir utiliser toutes les machines disponibles.
 
 J'ai quand même fini avec les connexions ssh mais ça n'a pas pu fonctionner à la fin.
+
+J'ai donc crée un serveur (le master) et les clients en socket sauf que j'utilisais encore des scp dans la phases shuffle. Ce qui ne fonctionnait pas....
+
+J'ai donc récréé un dossier pour repartir avec mes machines qui deviennent des serveurs et le master un client de tout les serveurs.

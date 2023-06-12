@@ -94,7 +94,7 @@ public class SLAVE {
                     int code = process.waitFor();
                     System.out.println("Code: " + code);
                     // Send back done.
-                    writer.write(String.valueOf(code));
+                    writer.write(String.valueOf(code) + "\n");
                     writer.flush();
                 }
                 reader.close();
