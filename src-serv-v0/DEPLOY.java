@@ -124,7 +124,7 @@ public class DEPLOY {
                         return;
                     }
 
-                    if (machineNumber % 10 == 0) {
+                    if (machineNumber != 0 && machineNumber % 5 == 0) {
                         Thread.sleep(60000);
                     }
                 } catch (IOException | InterruptedException e) {
