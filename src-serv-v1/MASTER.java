@@ -58,7 +58,7 @@ public class MASTER {
         System.out.println("Waiting for clients...");
 
         // Dire aux clients de se connecter
-        askClientToConnect(machines);
+        connectToMachines(machines);
 
         while (clients.size() < machines.size()) {
             try {
@@ -131,7 +131,7 @@ public class MASTER {
         
     }
 
-    private void askClientToConnect(List<String> machines) {
+    private void connectToMachines(List<String> machines) {
         machines.forEach(ipAddress -> {
             String machine = String.format("%s@%s", USERNAME, ipAddress);
 

@@ -21,6 +21,8 @@ public class SLAVE {
 
     private static final String MACHINES_FILE = HOME_DIRECTORY + "/machines.txt";
 
+    private static final int PORT = 8888;
+
     private static final HashMap<Integer, String> machines = new HashMap<>();
 
     private BufferedReader reader;
