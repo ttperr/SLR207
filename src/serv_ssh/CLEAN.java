@@ -10,7 +10,7 @@ public class CLEAN {
 
     private static final String REMOTE_DIR = "/tmp/" + USERNAME + "/";
 
-    private static final String MACHINES_FILE = "machines.txt";
+    private static final String MACHINES_FILE = "data/machines.txt";
 
     public static void main(String[] args) {
         try {
