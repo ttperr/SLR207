@@ -1,9 +1,4 @@
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -29,10 +24,10 @@ public class SLAVE {
         int mode = Integer.parseInt(args[0]);
 
         System.out.println("Mode: " + mode);
-        
+
         File machinesFile = new File(MACHINES_FILE);
         getMachines(machinesFile);
-        
+
         if (mode == 0) {
             String inputFile = args[1];
             System.out.println("Input file: " + inputFile);
@@ -167,17 +162,17 @@ public class SLAVE {
         try {
             File reduceDirectory = new File(REDUCE_DIRECTORY);
             reduceDirectory.mkdirs();
-    
+
             File shuffleReceivedDirectory = new File(SHUFFLE_RECEIVED_DIRECTORY + File.separator);
             File[] shuffleReceivedFiles = shuffleReceivedDirectory.listFiles();
-    
+
             HashMap<String, Integer> wordCountMap = new HashMap<>();
 
             assert shuffleReceivedFiles != null;
             for (File shuffleReceivedFile : shuffleReceivedFiles) {
                 try (BufferedReader reader = new BufferedReader(new FileReader(shuffleReceivedFile))) {
                     String line;
-    
+
                     while ((line = reader.readLine()) != null) {
                         String[] keyValue = line.split(", ");
                         if (keyValue.length == 2) {
@@ -188,7 +183,7 @@ public class SLAVE {
                     }
                 }
             }
-    
+
             for (Entry<String, Integer> entry : wordCountMap.entrySet()) {
                 String key = entry.getKey();
                 int count = entry.getValue();
@@ -201,12 +196,12 @@ public class SLAVE {
                     writer.newLine();
                 }
             }
-    
+
             System.out.println("Reduce calculation completed");
-    
+
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-    
+
 }

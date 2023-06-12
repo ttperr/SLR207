@@ -1,11 +1,11 @@
 {
-    "java.project.sourcePaths": [
-        "src-ssh",
-        "src-serv-v0",
-        "src-serv-v1"
-    ],
-    "java.project.referencedLibraries": [
-        "lib/**/*.jar",
-        "libs/json-20230227.jar"
-    ]
+  "java.project.sourcePaths": [
+    "src-ssh",
+    "src-serv-v0",
+    "src-serv-v1"
+  ],
+  "java.project.referencedLibraries": [
+    "lib/**/*.jar",
+    "libs/json-20230227.jar"
+  ]
 }

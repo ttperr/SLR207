@@ -1,8 +1,4 @@
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
@@ -27,11 +23,9 @@ public class MASTER {
 
     private static final String SERVER = "tp-3a101-00.enst.fr";
     private static final int PORT = 8888;
-
-    private List<String> machines = new ArrayList<>();
-
-    private ServerSocket serverSocket;
     private final List<ClientHandler> clients; // Liste des clients connectés
+    private List<String> machines = new ArrayList<>();
+    private ServerSocket serverSocket;
 
     public MASTER() {
         clients = new ArrayList<>();
@@ -41,6 +35,11 @@ public class MASTER {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static void main(String[] args) {
+        MASTER master = new MASTER();
+        master.start();
     }
 
     public void start() {
@@ -113,21 +112,21 @@ public class MASTER {
         System.out.println("REDUCE FINISHED");
 
         /*****************  RÉCUPÉRATION DE RÉSULTATS *****************
-        // Copier les fichiers de reduce vers la machine locale
-        List<Process> processesResults = runResultPhase(machines);
+         // Copier les fichiers de reduce vers la machine locale
+         List<Process> processesResults = runResultPhase(machines);
 
-        // Attendre que tous les SCP se terminent
-        waitForProcesses(processesResults);
-        System.out.println("Résultats récupérés.");
+         // Attendre que tous les SCP se terminent
+         waitForProcesses(processesResults);
+         System.out.println("Résultats récupérés.");
 
-        // Merge les résultats
-        mergeResults();
-        System.out.println("Résultats fusionnés et présents dans result.txt");
-        */
+         // Merge les résultats
+         mergeResults();
+         System.out.println("Résultats fusionnés et présents dans result.txt");
+         */
         // Ferme tous les clients
         clients.forEach(ClientHandler::close);
         System.out.println("Finished.");
-        
+
     }
 
     private void connectToMachines(List<String> machines) {
@@ -364,10 +363,5 @@ public class MASTER {
             }
         }
 
-    }
-
-    public static void main(String[] args) {
-        MASTER master = new MASTER();
-        master.start();
     }
 }

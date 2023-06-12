@@ -1,11 +1,4 @@
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map.Entry;
@@ -22,28 +15,6 @@ public class SLAVE {
     private static final String MACHINES_FILE = HOME_DIRECTORY + "/machines.txt";
 
     private static final HashMap<Integer, String> machines = new HashMap<>();
-
-    public static void main(String[] args) throws NumberFormatException, InterruptedException {
-        if (args.length > 3) {
-            System.err.println("Usage: java -jar SLAVE.jar <mode> <inputFile || serverAddress> <port>");
-            return;
-        }
-
-        int mode = Integer.parseInt(args[0]);
-
-        System.out.println("Mode: " + mode);
-        
-        File machinesFile = new File(MACHINES_FILE);
-        getMachines(machinesFile);
-
-        if(args.length == 1) {
-            new SLAVE(mode);
-        } else if (args.length == 2) {
-            new SLAVE(mode, args[1]);
-        } else {
-            new SLAVE(mode, args[1], Integer.parseInt(args[2]));
-        }
-    }
 
     public SLAVE(int mode) {
         if (mode == 2) {
@@ -103,6 +74,28 @@ public class SLAVE {
             System.err.println("Invalid mode.");
             System.err.println("Usage: java -jar SLAVE.jar <mode> <serverAddress> <port>");
             System.exit(1);
+        }
+    }
+
+    public static void main(String[] args) throws NumberFormatException, InterruptedException {
+        if (args.length > 3) {
+            System.err.println("Usage: java -jar SLAVE.jar <mode> <inputFile || serverAddress> <port>");
+            return;
+        }
+
+        int mode = Integer.parseInt(args[0]);
+
+        System.out.println("Mode: " + mode);
+
+        File machinesFile = new File(MACHINES_FILE);
+        getMachines(machinesFile);
+
+        if (args.length == 1) {
+            new SLAVE(mode);
+        } else if (args.length == 2) {
+            new SLAVE(mode, args[1]);
+        } else {
+            new SLAVE(mode, args[1], Integer.parseInt(args[2]));
         }
     }
 
@@ -225,17 +218,17 @@ public class SLAVE {
         try {
             File reduceDirectory = new File(REDUCE_DIRECTORY);
             reduceDirectory.mkdirs();
-    
+
             File shuffleReceivedDirectory = new File(SHUFFLE_RECEIVED_DIRECTORY + File.separator);
             File[] shuffleReceivedFiles = shuffleReceivedDirectory.listFiles();
-    
+
             HashMap<String, Integer> wordCountMap = new HashMap<>();
 
             assert shuffleReceivedFiles != null;
             for (File shuffleReceivedFile : shuffleReceivedFiles) {
                 try (BufferedReader reader = new BufferedReader(new FileReader(shuffleReceivedFile))) {
                     String line;
-    
+
                     while ((line = reader.readLine()) != null) {
                         String[] keyValue = line.split(", ");
                         if (keyValue.length == 2) {
@@ -246,7 +239,7 @@ public class SLAVE {
                     }
                 }
             }
-    
+
             for (Entry<String, Integer> entry : wordCountMap.entrySet()) {
                 String key = entry.getKey();
                 int count = entry.getValue();
@@ -259,12 +252,12 @@ public class SLAVE {
                     writer.newLine();
                 }
             }
-    
+
             System.out.println("Reduce calculation completed");
-    
+
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-    
+
 }

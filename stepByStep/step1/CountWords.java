@@ -32,6 +32,16 @@ public class CountWords {
         System.out.println("\nTook: " + (endTime3 - startTime3) + " ms to print\n");
     }
 
+    public static void main(String[] args) {
+        // new CountWords("Step1/data/input.txt", -1);
+        // new CountWords("Step1/data/forestier_mayotte.txt", -1);
+        // new CountWords("Step1/data/deontologie_police_nationale.txt", 50);
+        // new CountWords("Step1/data/domaine_public_fluvial.txt", 50);
+        // new CountWords("Step1/data/sante_publique.txt", 50);
+        new CountWords("/tmp/slr207/CC-MAIN-20230320083513-20230320113513-00000.warc.wet",
+                50);
+    }
+
     private String readFile(String path) {
         String content = "";
         try {
@@ -100,16 +110,6 @@ public class CountWords {
                 break;
             }
         }
-    }
-
-    public static void main(String[] args) {
-        // new CountWords("Step1/data/input.txt", -1);
-        // new CountWords("Step1/data/forestier_mayotte.txt", -1);
-        // new CountWords("Step1/data/deontologie_police_nationale.txt", 50);
-        // new CountWords("Step1/data/domaine_public_fluvial.txt", 50);
-        // new CountWords("Step1/data/sante_publique.txt", 50);
-        new CountWords("/tmp/slr207/CC-MAIN-20230320083513-20230320113513-00000.warc.wet",
-                50);
     }
 
 }

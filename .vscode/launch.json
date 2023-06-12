@@ -1,119 +1,119 @@
 {
-    // Utilisez IntelliSense pour en savoir plus sur les attributs possibles.
-    // Pointez pour afficher la description des attributs existants.
-    // Pour plus d'informations, visitez : https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "type": "java",
-            "name": "CLEAN",
-            "request": "launch",
-            "mainClass": "CLEAN",
-            "projectName": "SLR207_d76b2835"
-        },
-        {
-            "type": "java",
-            "name": "MASTER",
-            "request": "launch",
-            "mainClass": "MASTER",
-            "projectName": "SLR207_d76b2835"
-        },
-        {
-            "type": "java",
-            "name": "DEPLOY",
-            "request": "launch",
-            "mainClass": "DEPLOY",
-            "projectName": "SLR207_d76b2835"
-        },
-        {
-            "type": "java",
-            "name": "MASTER",
-            "request": "launch",
-            "mainClass": "MASTER",
-            "projectName": "SLR207_26d3f5b9"
-        },
-        {
-            "type": "java",
-            "name": "DEPLOY",
-            "request": "launch",
-            "mainClass": "DEPLOY",
-            "projectName": "SLR207_26d3f5b9"
-        },
-        {
-            "type": "java",
-            "name": "CLEAN",
-            "request": "launch",
-            "mainClass": "CLEAN",
-            "projectName": "SLR207_26d3f5b9"
-        },
-        {
-            "type": "java",
-            "name": "CLEAN",
-            "request": "launch",
-            "mainClass": "Step8.CLEAN",
-            "projectName": "SLR207_26d3f5b9"
-        },
-        {
-            "type": "java",
-            "name": "DEPLOY",
-            "request": "launch",
-            "mainClass": "Step7.DEPLOY",
-            "projectName": "SLR207_26d3f5b9"
-        },
-        {
-            "type": "java",
-            "name": "MASTER",
-            "request": "launch",
-            "mainClass": "Step10.MASTER",
-            "projectName": "SLR207_26d3f5b9"
-        },
-        {
-            "type": "java",
-            "name": "SLAVE",
-            "request": "launch",
-            "mainClass": "Step5.SLAVE",
-            "projectName": "SLR207_d76b2835"
-        },
-        {
-            "type": "java",
-            "name": "CountWords",
-            "request": "launch",
-            "mainClass": "Step1.CountWords",
-            "projectName": "SLR207_d76b2835"
-        },
-        {
-            "type": "java",
-            "name": "CountWords",
-            "request": "launch",
-            "mainClass": "Step1.CountWords",
-            "projectName": "SLR207_c1deae8"
-        },
-        {
-            "type": "java",
-            "name": "Current File",
-            "request": "launch",
-            "mainClass": "${file}"
-        },
-        {
-            "type": "java",
-            "name": "CountWords",
-            "request": "launch",
-            "mainClass": "Step1.CountWords",
-            "projectName": "SLR207_642afa42"
-        },
-        {
-            "type": "java",
-            "name": "SimpleClient",
-            "request": "launch",
-            "mainClass": "Step2.SimpleClient",
-            "projectName": "SLR207_642afa42"
-        },
-        {
-            "type": "java",
-            "name": "SimpleServerProgram",
-            "request": "launch",
-            "mainClass": "Step2.SimpleServerProgram",
-            "projectName": "SLR207_642afa42"
-        }
-    ]
+  // Utilisez IntelliSense pour en savoir plus sur les attributs possibles.
+  // Pointez pour afficher la description des attributs existants.
+  // Pour plus d'informations, visitez : https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "CLEAN",
+      "request": "launch",
+      "mainClass": "CLEAN",
+      "projectName": "SLR207_d76b2835"
+    },
+    {
+      "type": "java",
+      "name": "MASTER",
+      "request": "launch",
+      "mainClass": "MASTER",
+      "projectName": "SLR207_d76b2835"
+    },
+    {
+      "type": "java",
+      "name": "DEPLOY",
+      "request": "launch",
+      "mainClass": "DEPLOY",
+      "projectName": "SLR207_d76b2835"
+    },
+    {
+      "type": "java",
+      "name": "MASTER",
+      "request": "launch",
+      "mainClass": "MASTER",
+      "projectName": "SLR207_26d3f5b9"
+    },
+    {
+      "type": "java",
+      "name": "DEPLOY",
+      "request": "launch",
+      "mainClass": "DEPLOY",
+      "projectName": "SLR207_26d3f5b9"
+    },
+    {
+      "type": "java",
+      "name": "CLEAN",
+      "request": "launch",
+      "mainClass": "CLEAN",
+      "projectName": "SLR207_26d3f5b9"
+    },
+    {
+      "type": "java",
+      "name": "CLEAN",
+      "request": "launch",
+      "mainClass": "Step8.CLEAN",
+      "projectName": "SLR207_26d3f5b9"
+    },
+    {
+      "type": "java",
+      "name": "DEPLOY",
+      "request": "launch",
+      "mainClass": "Step7.DEPLOY",
+      "projectName": "SLR207_26d3f5b9"
+    },
+    {
+      "type": "java",
+      "name": "MASTER",
+      "request": "launch",
+      "mainClass": "Step10.MASTER",
+      "projectName": "SLR207_26d3f5b9"
+    },
+    {
+      "type": "java",
+      "name": "SLAVE",
+      "request": "launch",
+      "mainClass": "Step5.SLAVE",
+      "projectName": "SLR207_d76b2835"
+    },
+    {
+      "type": "java",
+      "name": "CountWords",
+      "request": "launch",
+      "mainClass": "Step1.CountWords",
+      "projectName": "SLR207_d76b2835"
+    },
+    {
+      "type": "java",
+      "name": "CountWords",
+      "request": "launch",
+      "mainClass": "Step1.CountWords",
+      "projectName": "SLR207_c1deae8"
+    },
+    {
+      "type": "java",
+      "name": "Current File",
+      "request": "launch",
+      "mainClass": "${file}"
+    },
+    {
+      "type": "java",
+      "name": "CountWords",
+      "request": "launch",
+      "mainClass": "Step1.CountWords",
+      "projectName": "SLR207_642afa42"
+    },
+    {
+      "type": "java",
+      "name": "SimpleClient",
+      "request": "launch",
+      "mainClass": "Step2.SimpleClient",
+      "projectName": "SLR207_642afa42"
+    },
+    {
+      "type": "java",
+      "name": "SimpleServerProgram",
+      "request": "launch",
+      "mainClass": "Step2.SimpleServerProgram",
+      "projectName": "SLR207_642afa42"
+    }
+  ]
 }

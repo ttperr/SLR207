@@ -21,7 +21,7 @@ public class MASTER {
     private static final String MACHINES_FILE = "machines.txt";
 
     private static List<String> machines = new ArrayList<>();// contiendra tous les flux de sortie vers les
-                                                                   // clients
+    // clients
 
     public static void main(String[] args) {
         // Lire le fichier "machines.txt"
