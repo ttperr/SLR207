@@ -20,12 +20,12 @@ public class MASTER {
 
     private static final String MACHINES_FILE = "machines.txt";
 
-    private static List<String> machines = new ArrayList<String>();// contiendra tous les flux de sortie vers les
+    private static List<String> machines = new ArrayList<>();// contiendra tous les flux de sortie vers les
                                                                    // clients
 
     public static void main(String[] args) {
         // Lire le fichier "machines.txt"
-        getMachines(MACHINES_FILE);
+        getMachines();
 
         // Créer les répertoires sur les machines
         createSplitDirectoryOnMachines(machines);
@@ -42,7 +42,6 @@ public class MASTER {
         List<Process> processesCopyMachines = copyMachinesFile(machines);
 
         // Attendre que toutes les copies se terminent
-        assert processesCopyMachines != null;
         waitForProcesses(processesCopyMachines);
         System.out.println("Copie du fichier machines.txt effectuée.");
 
@@ -80,10 +79,10 @@ public class MASTER {
         System.out.println("Résultats fusionnés et présents dans result.txt");
     }
 
-    private static void getMachines(String machinesFile) {
+    private static void getMachines() {
         try {
             // Lire le fichier "machines.txt"
-            Path machinesFilePath = Path.of(machinesFile);
+            Path machinesFilePath = Path.of(MASTER.MACHINES_FILE);
             machines = Files.readAllLines(machinesFilePath);
         } catch (IOException e) {
             e.printStackTrace();

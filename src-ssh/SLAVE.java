@@ -148,6 +148,7 @@ public class SLAVE {
             File shuffleDirectory = new File(SHUFFLE_DIRECTORY);
             File[] shuffleFiles = shuffleDirectory.listFiles();
 
+            assert shuffleFiles != null;
             for (File shuffleFile : shuffleFiles) {
                 int hash = Integer.parseInt(shuffleFile.getName().split("-")[0]);
                 String ipAddress = machines.get(hash % machines.size());
@@ -171,7 +172,8 @@ public class SLAVE {
             File[] shuffleReceivedFiles = shuffleReceivedDirectory.listFiles();
     
             HashMap<String, Integer> wordCountMap = new HashMap<>();
-    
+
+            assert shuffleReceivedFiles != null;
             for (File shuffleReceivedFile : shuffleReceivedFiles) {
                 try (BufferedReader reader = new BufferedReader(new FileReader(shuffleReceivedFile))) {
                     String line;

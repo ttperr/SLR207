@@ -12,24 +12,18 @@ public class SimpleServerProgram {
 
     public static void main(String[] args) {
 
-        ServerSocket listener = null;
+        ServerSocket listener;
         String line;
         BufferedReader is;
         BufferedWriter os;
-        Socket socketOfServer = null;
+        Socket socketOfServer;
 
         // Try to open a server socket on port 9999
         // Note that we can't choose a port less than 1023 if we are not
         // privileged users (root)
 
         try {
-            listener = new ServerSocket(9999);
-        } catch (IOException e) {
-            System.out.println(e);
-            System.exit(1);
-        }
-
-        try {
+            listener = new ServerSocket(9999);){
             System.out.println("Server is waiting to accept user...");
 
             // Accept client connection request
@@ -65,6 +59,7 @@ public class SimpleServerProgram {
         } catch (IOException e) {
             System.out.println(e);
             e.printStackTrace();
+            System.exit(1);
         }
         System.out.println("Sever stopped!");
     }

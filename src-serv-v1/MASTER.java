@@ -28,10 +28,10 @@ public class MASTER {
     private static final String SERVER = "tp-3a101-00.enst.fr";
     private static final int PORT = 8888;
 
-    private List<String> machines = new ArrayList<String>();
+    private List<String> machines = new ArrayList<>();
 
     private ServerSocket serverSocket;
-    private List<ClientHandler> clients; // Liste des clients connectés
+    private final List<ClientHandler> clients; // Liste des clients connectés
 
     public MASTER() {
         clients = new ArrayList<>();
@@ -45,13 +45,12 @@ public class MASTER {
 
     public void start() {
         // Lire le fichier "machines.txt"
-        getMachines(MACHINES_FILE);
+        getMachines();
 
         // Copier le fichier machines.txt vers les machines
         List<Process> processesCopyMachines = copyMachinesFile(machines);
 
         // Attendre que toutes les copies se terminent
-        assert processesCopyMachines != null;
         waitForProcesses(processesCopyMachines);
         System.out.println("Copie du fichier machines.txt effectuée.");
 
@@ -148,10 +147,10 @@ public class MASTER {
         });
     }
 
-    private void getMachines(String machinesFile) {
+    private void getMachines() {
         try {
             // Lire le fichier "machines.txt"
-            Path machinesFilePath = Path.of(machinesFile);
+            Path machinesFilePath = Path.of(MASTER.MACHINES_FILE);
             machines = Files.readAllLines(machinesFilePath);
         } catch (IOException e) {
             e.printStackTrace();
@@ -159,9 +158,7 @@ public class MASTER {
     }
 
     private void createSplitDirectoryOnMachines(List<ClientHandler> clients) {
-        clients.forEach(client -> {
-            client.sendCommand("mkdir -p " + SPLIT_DIRECTORY_REMOTE);
-        });
+        clients.forEach(client -> client.sendCommand("mkdir -p " + SPLIT_DIRECTORY_REMOTE));
 
     }
 
@@ -231,27 +228,21 @@ public class MASTER {
     }
 
     private void runMapPhase(List<ClientHandler> clients) {
-        clients.forEach(client -> {
-            client.sendCommand("java " + "-jar " +
-                    HOME_DIRECTORY + File.separator + SLAVE + ".jar " + "0 " +
-                    SPLIT_DIRECTORY_REMOTE + File.separator + "S" + client.getMachineId() + ".txt");
-        });
+        clients.forEach(client -> client.sendCommand("java " + "-jar " +
+                HOME_DIRECTORY + File.separator + SLAVE + ".jar " + "0 " +
+                SPLIT_DIRECTORY_REMOTE + File.separator + "S" + client.getMachineId() + ".txt"));
     }
 
     private void runShufflePhase(List<ClientHandler> clients) {
-        clients.forEach(client -> {
-            client.sendCommand("java " + "-jar " +
-                    HOME_DIRECTORY + File.separator + SLAVE + ".jar " + "1 " +
-                    MAP_DIRECTORY_REMOTE + File.separator + "UM" + client.getMachineId() + ".txt");
-        });
+        clients.forEach(client -> client.sendCommand("java " + "-jar " +
+                HOME_DIRECTORY + File.separator + SLAVE + ".jar " + "1 " +
+                MAP_DIRECTORY_REMOTE + File.separator + "UM" + client.getMachineId() + ".txt"));
 
     }
 
     private void runReducePhase(List<ClientHandler> clients) {
-        clients.forEach(client -> {
-            client.sendCommand("java " + "-jar " +
-                    HOME_DIRECTORY + File.separator + SLAVE + ".jar " + "2");
-        });
+        clients.forEach(client -> client.sendCommand("java " + "-jar " +
+                HOME_DIRECTORY + File.separator + SLAVE + ".jar " + "2"));
     }
 
     private List<Process> runResultPhase(List<String> machines) {
@@ -315,12 +306,10 @@ public class MASTER {
     }
 
     private void waitForCommand(List<ClientHandler> clients) {
-        clients.forEach(client -> {
-            client.run();
-        });
+        clients.forEach(Thread::start);
     }
 
-    private class ClientHandler extends Thread {
+    private static class ClientHandler extends Thread {
         private final Socket clientSocket;
         private final BufferedReader in; // receive 0 if the command went well, the error otherwise
         private final PrintWriter out; // send all the commands to the client

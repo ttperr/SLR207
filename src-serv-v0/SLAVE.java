@@ -23,10 +23,6 @@ public class SLAVE {
 
     private static final HashMap<Integer, String> machines = new HashMap<>();
 
-    private BufferedReader reader;
-    private BufferedWriter writer;
-    private Socket clientSocket;
-
     public static void main(String[] args) throws NumberFormatException, InterruptedException {
         if (args.length > 3) {
             System.err.println("Usage: java -jar SLAVE.jar <mode> <inputFile || serverAddress> <port>");
@@ -44,7 +40,7 @@ public class SLAVE {
             new SLAVE(mode);
         } else if (args.length == 2) {
             new SLAVE(mode, args[1]);
-        } else if (args.length == 3) {
+        } else {
             new SLAVE(mode, args[1], Integer.parseInt(args[2]));
         }
     }
@@ -55,7 +51,7 @@ public class SLAVE {
         } else {
             System.err.println("Invalid mode.");
             System.err.println("Usage: java -jar SLAVE.jar <mode>");
-            return;
+            System.exit(1);
         }
     }
 
@@ -68,7 +64,7 @@ public class SLAVE {
         } else {
             System.err.println("Invalid mode.");
             System.err.println("Usage: java -jar SLAVE.jar <mode> <inputFile>");
-            return;
+            System.exit(1);
         }
     }
 
@@ -76,9 +72,9 @@ public class SLAVE {
         if (mode == 9) {
             System.out.println("Connecting to " + serverAddress + " on port " + port);
             try {
-                clientSocket = new Socket(serverAddress, port);
-                reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+                Socket clientSocket = new Socket(serverAddress, port);
+                BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
 
                 System.out.println("Connected to " + serverAddress + " on port " + port);
 
@@ -94,7 +90,7 @@ public class SLAVE {
                     int code = process.waitFor();
                     System.out.println("Code: " + code);
                     // Send back done.
-                    writer.write(String.valueOf(code) + "\n");
+                    writer.write(code + "\n");
                     writer.flush();
                 }
                 reader.close();
@@ -106,7 +102,7 @@ public class SLAVE {
         } else {
             System.err.println("Invalid mode.");
             System.err.println("Usage: java -jar SLAVE.jar <mode> <serverAddress> <port>");
-            return;
+            System.exit(1);
         }
     }
 
@@ -210,6 +206,7 @@ public class SLAVE {
             File shuffleDirectory = new File(SHUFFLE_DIRECTORY);
             File[] shuffleFiles = shuffleDirectory.listFiles();
 
+            assert shuffleFiles != null;
             for (File shuffleFile : shuffleFiles) {
                 int hash = Integer.parseInt(shuffleFile.getName().split("-")[0]);
                 String ipAddress = machines.get(hash % machines.size());
@@ -233,7 +230,8 @@ public class SLAVE {
             File[] shuffleReceivedFiles = shuffleReceivedDirectory.listFiles();
     
             HashMap<String, Integer> wordCountMap = new HashMap<>();
-    
+
+            assert shuffleReceivedFiles != null;
             for (File shuffleReceivedFile : shuffleReceivedFiles) {
                 try (BufferedReader reader = new BufferedReader(new FileReader(shuffleReceivedFile))) {
                     String line;

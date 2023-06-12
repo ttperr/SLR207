@@ -1,4 +1,5 @@
-import java.io.File;
+package Step7;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -6,14 +7,9 @@ import java.util.List;
 
 public class DEPLOY {
     private static final String USERNAME = "tperrot-21";
-
     private static final String REMOTE_DIR = "/tmp/" + USERNAME + "/";
-
-    private static final String SRC_DIR = "src";
-
-    private static final String SLAVE = "SLAVE";
+    private static final String SLAVE = "Step10/SLAVE";
     private static final String SLAVE_JAR = "SLAVE.jar";
-
     private static final String MACHINES_FILE = "machines.txt";
 
     public static void main(String[] args) {
@@ -25,7 +21,6 @@ public class DEPLOY {
             // Création du fichier SLAVE.jar à partir de SLAVE.java et suppression de
             // SLAVE.class directement
             ProcessBuilder javacPb = new ProcessBuilder("javac", SLAVE + ".java");
-            javacPb.directory(Path.of(SRC_DIR).toFile());
             Process javacProcess = javacPb.start();
             int javacExitCode = javacProcess.waitFor();
 
@@ -34,9 +29,7 @@ public class DEPLOY {
                 System.out.println("Compilation terminée avec succès");
 
                 // Créer le fichier JAR
-                ProcessBuilder jarPb = new ProcessBuilder("jar", "cvfe", ".." + File.separator + SLAVE_JAR, SLAVE,
-                        SLAVE + ".class");
-                jarPb.directory(Path.of(SRC_DIR).toFile());
+                ProcessBuilder jarPb = new ProcessBuilder("jar", "cvfe", SLAVE_JAR, "SLAVE", SLAVE + ".class");
                 Process jarProcess = jarPb.start();
                 int jarExitCode = jarProcess.waitFor();
 
@@ -46,7 +39,6 @@ public class DEPLOY {
 
                     // Supprimer le fichier SLAVE.class
                     ProcessBuilder rmPb = new ProcessBuilder("rm", SLAVE + ".class");
-                    rmPb.directory(Path.of(SRC_DIR).toFile());
                     Process rmProcess = rmPb.start();
                     int rmExitCode = rmProcess.waitFor();
 
@@ -109,25 +101,24 @@ public class DEPLOY {
                                 // Une erreur s'est produite lors de la copie du fichier
                                 System.err.println("Erreur lors de la copie du fichier sur la machine " + machineNumber
                                         + ": " + ipAddress);
-                                return;
+                                System.exit(1);
                             }
                         } else {
                             // Une erreur s'est produite lors de la création du répertoire
                             System.err.println("Erreur lors de la création du répertoire sur la machine "
                                     + machineNumber + ": " + ipAddress);
-                            return;
+                            System.exit(1);
                         }
                     } else {
                         // La connexion SSH a échoué.
                         System.err.println(
                                 "Échec de la connexion SSH sur la machine " + machineNumber + ": " + ipAddress);
-                        return;
+                        System.exit(1);
                     }
                 } catch (IOException | InterruptedException e) {
                     e.printStackTrace();
                 }
             });
-
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }

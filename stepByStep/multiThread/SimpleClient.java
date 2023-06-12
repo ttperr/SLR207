@@ -10,9 +10,9 @@ public class SimpleClient {
         // Server Host
         final String serverHost = "tp-1a226-02.enst.fr";
 
-        Socket socketOfClient = null;
-        BufferedWriter os = null;
-        BufferedReader is = null;
+        Socket socketOfClient;
+        BufferedWriter os;
+        BufferedReader is;
 
         try {
 

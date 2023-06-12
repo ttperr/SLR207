@@ -36,7 +36,6 @@ public class MASTER {
             List<Process> processesCopyMachines = copyMachinesFile(machines);
 
             // Attendre que toutes les copies se terminent
-            assert processesCopyMachines != null;
             waitForProcesses(processesCopyMachines);
             System.out.println("Copie du fichier machines.txt effectuée.");
 

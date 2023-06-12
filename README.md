@@ -131,7 +131,7 @@ Lors de mon étape 6, étant donné le TimeOut d'attente de sortie standard et d
 
 ## Étape 7
 
-Le programme ``DEPLOY`` lance les connexions de manière séquentielle. Pour attendre que le mkdir termine correctement j'utilise la fonction ``waitFor``.
+Le programme ``DEPLOY`` lance les connexions de manière séquentielle. Pour attendre que le mkdir termine correctement, j'utilise la fonction ``waitFor``.
 De même, le programme lance les copies de manière séquentielle.
 
 ## Étape 8
@@ -148,6 +148,6 @@ Lors de la création des dossiers, je récupère le code de sortie afin de véri
 
 J'ai quand même fini avec les connexions ssh mais ça n'a pas pu fonctionner à la fin.
 
-J'ai donc crée un serveur (le master) et les clients en socket sauf que j'utilisais encore des scp dans la phases shuffle. Ce qui ne fonctionnait pas....
+J'ai donc créé un serveur (le master) et les clients en socket sauf que j'utilisais encore des scp dans la phase shuffle. Ce qui ne fonctionnait pas....
 
-J'ai donc récréé un dossier pour repartir avec mes machines qui deviennent des serveurs et le master un client de tout les serveurs.
+J'ai donc récréé un dossier pour repartir avec mes machines qui deviennent des serveurs et le master un client de tous les serveurs.

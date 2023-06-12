@@ -9,7 +9,7 @@ public class DEPLOY {
 
     private static final String REMOTE_DIR = "/tmp/" + USERNAME + "/";
 
-    private static final String SRC_DIR = "src-serv";
+    private static final String SRC_DIR = "src-serv-v0";
 
     private static final String SLAVE = "SLAVE";
     private static final String SLAVE_JAR = "SLAVE.jar";
@@ -25,7 +25,8 @@ public class DEPLOY {
             // Création du fichier SLAVE.jar à partir de SLAVE.java et suppression de
             // SLAVE.class directement
             ProcessBuilder javacPb = new ProcessBuilder("javac", SLAVE + ".java");
-            javacPb.directory(Path.of(SRC_DIR).toFile());
+            Path srcDirPath = Path.of(SRC_DIR);
+            javacPb.directory(srcDirPath.toFile());
             Process javacProcess = javacPb.start();
             int javacExitCode = javacProcess.waitFor();
 
@@ -36,7 +37,7 @@ public class DEPLOY {
                 // Créer le fichier JAR
                 ProcessBuilder jarPb = new ProcessBuilder("jar", "cvfe", ".." + File.separator + SLAVE_JAR, SLAVE,
                         SLAVE + ".class");
-                jarPb.directory(Path.of(SRC_DIR).toFile());
+                jarPb.directory(srcDirPath.toFile());
                 Process jarProcess = jarPb.start();
                 int jarExitCode = jarProcess.waitFor();
 
@@ -46,7 +47,7 @@ public class DEPLOY {
 
                     // Supprimer le fichier SLAVE.class
                     ProcessBuilder rmPb = new ProcessBuilder("rm", SLAVE + ".class");
-                    rmPb.directory(Path.of(SRC_DIR).toFile());
+                    rmPb.directory(srcDirPath.toFile());
                     Process rmProcess = rmPb.start();
                     int rmExitCode = rmProcess.waitFor();
 

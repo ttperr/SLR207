@@ -1,7 +1,7 @@
 {
     "java.project.sourcePaths": [
+        "src-ssh",
         "src-serv-v0",
-        "src",
         "src-serv-v1"
     ],
     "java.project.referencedLibraries": [
