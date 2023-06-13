@@ -170,3 +170,7 @@ shuffle. Ce qui ne fonctionnait pas....
 
 J'ai donc récréé un dossier pour repartir avec mes machines qui deviennent des serveurs et le master un client de tous
 les serveurs.
+
+> **stepByStep, serv_ssh, serv_v0 directories are deprecated and will certainly not work**
+
+# Procédure de lancement
