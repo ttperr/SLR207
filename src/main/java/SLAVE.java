@@ -16,28 +16,13 @@ public class SLAVE {
 
     private static final int PORT = 8888;
 
-    // Enum where mode 0 = split, mode 1 = map, mode 2 = reduce and 9 = init
-    private enum Mode {
-        MAP(0), SHUFFLE(1), REDUCE(2), INIT(9);
-
-        private final int value;
-
-        private Mode(int value) {
-            this.value = value;
-        }
-
-        public int getValue() {
-            return value;
-        }
-    }
-
     private static final HashMap<Integer, String> machines = new HashMap<>();
 
 
     public SLAVE(int mode, String inputFile) {
-        if (mode == Mode.MAP.getValue()) {
+        if (mode == 0) {
             launchMap(inputFile);
-        } else if (mode == Mode.SHUFFLE.getValue()) {
+        } else if (mode == 1) {
             launchShuffle(inputFile);
             processShuffleOutput();
         } else {
@@ -47,7 +32,7 @@ public class SLAVE {
         }
     }
     public SLAVE(int mode) {
-        if (mode == Mode.REDUCE.getValue()) {
+        if (mode == 2) {
             launchReduce();
         } else {
             System.err.println("Invalid mode.");
@@ -57,7 +42,7 @@ public class SLAVE {
     }
 
     public SLAVE(int mode, String serverAddress, int port) throws InterruptedException {
-        if (mode == Mode.INIT.getValue()) {
+        if (mode == 9) {
             System.out.println("Connecting to " + serverAddress + " on port " + port);
             try {
                 Socket clientSocket = new Socket(serverAddress, port);

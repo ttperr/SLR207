@@ -9,7 +9,8 @@ public class DEPLOY {
 
     private static final String REMOTE_DIR = "/tmp/" + USERNAME + "/";
 
-    private static final String SRC_DIR = "src/main/java";
+    private static final String PROJECT_DIR = "src/main";
+    private static final String SRC_DIR = PROJECT_DIR + "/java";
 
     private static final String SLAVE = "SLAVE";
     private static final String SLAVE_JAR = "SLAVE.jar";
@@ -55,7 +56,7 @@ public class DEPLOY {
                         // Le fichier SLAVE.class a été supprimé avec succès
                         System.out.println("Fichier SLAVE.class supprimé avec succès");
 
-                        System.out.println("\n\nDéploiement sur les machines...\n");
+                        System.out.println("\nDéploiement sur les machines...");
                     } else {
                         // Une erreur s'est produite lors de la suppression du fichier SLAVE.class
                         System.err.println("Erreur lors de la suppression du fichier SLAVE.class");
@@ -98,8 +99,9 @@ public class DEPLOY {
                             // Le répertoire a été créé avec succès
                             System.out.println("Répertoire créé sur la machine " + machineNumber + ": " + ipAddress);
 
-                            // Copier le fichier "slave.jar" dans le répertoire distant
+                            // Copier le fichier "SLAVE.jar" dans le répertoire distant
                             ProcessBuilder scpPb = new ProcessBuilder("scp", SLAVE_JAR, machine + ":" + REMOTE_DIR);
+                            scpPb.directory(new File(PROJECT_DIR));
                             Process scpProcess = scpPb.start();
                             int scpExitCode = scpProcess.waitFor();
 
