@@ -357,7 +357,7 @@ public class MASTER {
 
         public void close() {
             try {
-                sendCommand("quit");
+                sendCommand("QUIT");
                 in.close();
                 out.close();
                 clientSocket.close();

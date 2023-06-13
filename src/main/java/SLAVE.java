@@ -18,7 +18,6 @@ public class SLAVE {
 
     private static final HashMap<Integer, String> machines = new HashMap<>();
     private static final ArrayList<Socket> clients = new ArrayList<>();
-    private static final ArrayList<ServerSocket> servers = new ArrayList<>();
     private static final String MASTER_ADDRESS = "tp-3a101-00.enst.fr";
     private static final int PORT = 8888;
 
@@ -45,21 +44,23 @@ public class SLAVE {
         }
     }
 
-    public SLAVE(int mode, String serverAddress, int port) throws InterruptedException {
+    public SLAVE(int mode, String masterAddress, int port) throws InterruptedException {
         if (mode == 9) {
-            System.out.println("Connecting to " + serverAddress + " on port " + port);
+            System.out.println("Connecting to " + masterAddress + " on port " + port);
             try {
-                Socket clientSocket = new Socket(serverAddress, port);
-                BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+                Socket clientSocket = new Socket(masterAddress, port);
+                clients.add(clientSocket);
 
-                System.out.println("Connected to " + serverAddress + " on port " + port);
+                BufferedReader readerMaster = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                BufferedWriter writerMaster = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+
+                System.out.println("Connected to " + masterAddress + " on port " + port);
 
                 String line;
                 while (true) {
-                    line = reader.readLine();
+                    line = readerMaster.readLine();
                     System.out.println("Received: " + line);
-                    if (line.equals("quit")) {
+                    if (line.equals("QUIT")) {
                         break;
                     }
                     // Execute line
@@ -67,18 +68,18 @@ public class SLAVE {
                     int code = process.waitFor();
                     System.out.println("Code: " + code);
                     // Send back done.
-                    writer.write(code + "\n");
-                    writer.flush();
+                    writerMaster.write(code + "\n");
+                    writerMaster.flush();
                 }
-                reader.close();
-                writer.close();
+                readerMaster.close();
+                writerMaster.close();
                 clientSocket.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         } else {
             System.err.println("Invalid mode.");
-            System.err.println("Usage: java -jar SLAVE.jar <mode> <serverAddress> <port>");
+            System.err.println("Usage: java -jar SLAVE.jar <mode> <masterAddress> <port>");
             System.exit(1);
         }
     }
