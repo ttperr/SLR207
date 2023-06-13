@@ -31,9 +31,9 @@ associées à des valeurs (ici les mots associés à leur occurrence).
     4. directeur
     5. conditions
 * Pour l'extrait de page internet, j'ai obtenu ces données :
-    * Durée de lecture et de séparation : 4.039s
-    * Durée de comptage : 5.271s
-    * Durée de tri et d'affichage des 50 premiers mots : 6.809s
+  * Durée de lecture et de séparation : 4.039s
+  * Durée de comptage : 5.271s
+  * Durée de tri et d'affichage des 50 premiers mots : 6.809s
 
 ## Étape 2
 
@@ -169,8 +169,13 @@ J'ai donc créé un serveur (le master) et les clients en socket sauf que j'util
 shuffle. Ce qui ne fonctionnait pas....
 
 J'ai donc récréé un dossier pour repartir avec mes machines qui deviennent des serveurs et le master un client de tous
-les serveurs.
+les serveurs. Après de longue réflexion de comment gérer tout cela j'ai enfin réussi !
 
 > **stepByStep, serv_ssh, serv_v0 directories are deprecated and will certainly not work**
 
-# Procédure de lancement
+## Idée pour les sockets
+
+* DEPLOY : Envoi du slave.jar et du machines.txt (en créant le dossier sur l'ordinateur master comme ça il n'y a besoin que d'un seul scp)
+* SLAVE : Plusieurs mode mais le mode 10 est l'initialisation des sockets. Ainsi, il faut que chaque machine crée un socket serveur et attende une connexion. Ensuite, quitte à utiliser la fonction ``isServerSocketOpen(String host, int port)``, le master envoie une demande de connexion en temps que client à chaque machine et récupère ainsi une liste de serveur. Ensuite, il dit à chaque serveur de se connecter à tous les autres serveurs (par message socket). Ainsi, chaque serveur est connecté à tous les autres serveurs.
+
+## Procédure de lancement

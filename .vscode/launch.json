@@ -6,6 +6,13 @@
   "configurations": [
     {
       "type": "java",
+      "name": "TEST",
+      "request": "launch",
+      "mainClass": "TEST",
+      "projectName": "SLR207_26d3f5b9"
+    },
+    {
+      "type": "java",
       "name": "CLEAN",
       "request": "launch",
       "mainClass": "CLEAN",

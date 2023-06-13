@@ -17,10 +17,12 @@ public class SLAVE {
     private static final String MACHINES_FILE = HOME_DIRECTORY + "/machines.txt";
 
     private static final HashMap<Integer, String> machines = new HashMap<>();
-    private static final ArrayList<Socket> clients = new ArrayList<>();
+
     private static final String MASTER_ADDRESS = "tp-3a101-00.enst.fr";
     private static final int PORT = 8888;
+    private static Socket master;
 
+    private static final ArrayList<Socket> clients = new ArrayList<>();
 
     public SLAVE(int mode, String inputFile) {
         if (mode == 0) {
@@ -34,27 +36,18 @@ public class SLAVE {
             System.exit(1);
         }
     }
+
     public SLAVE(int mode) {
         if (mode == 2) {
             launchReduce();
-        } else {
-            System.err.println("Invalid mode.");
-            System.err.println("Usage: java -jar SLAVE.jar <mode>");
-            System.exit(1);
-        }
-    }
-
-    public SLAVE(int mode, String masterAddress, int port) throws InterruptedException {
-        if (mode == 9) {
-            System.out.println("Connecting to " + masterAddress + " on port " + port);
+        } else if (mode == 10) {
+            System.out.println("Connecting to master : " + MASTER_ADDRESS + " on port " + PORT);
             try {
-                Socket clientSocket = new Socket(masterAddress, port);
-                clients.add(clientSocket);
+                master = new Socket(MASTER_ADDRESS, PORT);
+                BufferedReader readerMaster = new BufferedReader(new InputStreamReader(master.getInputStream()));
+                BufferedWriter writerMaster = new BufferedWriter(new OutputStreamWriter(master.getOutputStream()));
 
-                BufferedReader readerMaster = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                BufferedWriter writerMaster = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
-
-                System.out.println("Connected to " + masterAddress + " on port " + port);
+                System.out.println("Connected to " + MASTER_ADDRESS + " on port " + PORT);
 
                 String line;
                 while (true) {
@@ -73,13 +66,13 @@ public class SLAVE {
                 }
                 readerMaster.close();
                 writerMaster.close();
-                clientSocket.close();
-            } catch (IOException e) {
+                master.close();
+            } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             }
         } else {
             System.err.println("Invalid mode.");
-            System.err.println("Usage: java -jar SLAVE.jar <mode> <masterAddress> <port>");
+            System.err.println("Usage: java -jar SLAVE.jar <mode>");
             System.exit(1);
         }
     }
@@ -199,7 +192,7 @@ public class SLAVE {
         }
     }
 
-    private static void processShuffleOutput() {
+    private static void processShuffleOutput() { // TODO: Modify to use socket instead of scp
         try {
             File shuffleReceivedDirectory = new File(SHUFFLE_RECEIVED_DIRECTORY);
             shuffleReceivedDirectory.mkdirs();
