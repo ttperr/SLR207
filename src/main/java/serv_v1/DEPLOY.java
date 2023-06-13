@@ -11,7 +11,7 @@ public class DEPLOY {
 
     private static final String REMOTE_DIR = "/tmp/" + USERNAME + "/";
 
-    private static final String SRC_DIR = "serv_v1";
+    private static final String SRC_DIR = "src/main/java/serv_v1";
 
     private static final String SLAVE = "SLAVE";
     private static final String SLAVE_JAR = "SLAVE.jar";

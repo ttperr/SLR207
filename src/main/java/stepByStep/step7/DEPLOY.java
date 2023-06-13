@@ -8,7 +8,7 @@ import java.util.List;
 public class DEPLOY {
     private static final String USERNAME = "tperrot-21";
     private static final String REMOTE_DIR = "/tmp/" + USERNAME + "/";
-    private static final String SLAVE = "Step10/SLAVE";
+    private static final String SLAVE = "src/main/java/stepByStep/step10/SLAVE";
     private static final String SLAVE_JAR = "SLAVE.jar";
     private static final String MACHINES_FILE = "machines.txt";
 

@@ -33,11 +33,11 @@ public class CountWords {
     }
 
     public static void main(String[] args) {
-        // new CountWords("Step1/data/input.txt", -1);
-        // new CountWords("Step1/data/forestier_mayotte.txt", -1);
-        // new CountWords("Step1/data/deontologie_police_nationale.txt", 50);
-        // new CountWords("Step1/data/domaine_public_fluvial.txt", 50);
-        // new CountWords("Step1/data/sante_publique.txt", 50);
+        // new CountWords("stepByStep/step1/data/input.txt", -1);
+        // new CountWords("stepByStep/step1/data/forestier_mayotte.txt", -1);
+        // new CountWords("stepByStep/step1/data/deontologie_police_nationale.txt", 50);
+        // new CountWords("stepByStep/step1/data/domaine_public_fluvial.txt", 50);
+        // new CountWords("stepByStep/step1/data/sante_publique.txt", 50);
         new CountWords("/tmp/slr207/CC-MAIN-20230320083513-20230320113513-00000.warc.wet",
                 50);
     }

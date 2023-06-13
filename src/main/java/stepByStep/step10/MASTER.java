@@ -11,41 +11,42 @@ public class MASTER {
     private static final String USERNAME = "tperrot-21";
     private static final String HOME_DIRECTORY = "/tmp/" + USERNAME;
     private static final String SPLIT_DIRECTORY_REMOTE = HOME_DIRECTORY + "/splits";
-    private static final String SPLIT_DIRECTORY = "Step10/data.splits";
-    private static final String SLAVE_CLASS_NAME = "Step10.SLAVE";
+    private static final String PACKAGE_NAME = "main.java.stepByStep.step10";
+    private static final String SLAVE_CLASS_NAME =  PACKAGE_NAME + ".SLAVE";
+    private static final String SPLIT_DIRECTORY = "data/splits";
     private static final String MACHINES_FILE = "machines.txt";
 
     public static void main(String[] args) {
         try {
-            // Lire le fichier "machines.txt"
-            Path machinesFilePath = Path.of(MACHINES_FILE);
-            List<String> machines = Files.readAllLines(machinesFilePath);
+           // Lire le fichier "machines.txt"
+           Path machinesFilePath = Path.of(MACHINES_FILE);
+           List<String> machines = Files.readAllLines(machinesFilePath);
 
-            // Créer les répertoires sur les machines
-            createSplitDirectoryOnMachines(machines);
+           // Créer les répertoires sur les machines
+           createSplitDirectoryOnMachines(machines);
 
-            // Copier les fichiers de data.splits vers les machines
-            List<Process> processesSplit = copySplitsToMachines(machines);
+           // Copier les fichiers de data.splits vers les machines
+           List<Process> processesSplit = copySplitsToMachines(machines);
 
-            // Attendre que tous les SCP se terminent
-            assert processesSplit != null;
-            waitForProcesses(processesSplit);
-            System.out.println("Copie des data.splits sur les machines effectuée.");
+           // Attendre que tous les SCP se terminent
+           assert processesSplit != null;
+           waitForProcesses(processesSplit);
+           System.out.println("Copie des data.splits sur les machines effectuée.");
 
-            // Copier le fichier machines.txt vers les machines
-            List<Process> processesCopyMachines = copyMachinesFile(machines);
+           // Copier le fichier machines.txt vers les machines
+           List<Process> processesCopyMachines = copyMachinesFile(machines);
 
-            // Attendre que toutes les copies se terminent
-            waitForProcesses(processesCopyMachines);
-            System.out.println("Copie du fichier machines.txt effectuée.");
+           // Attendre que toutes les copies se terminent
+           waitForProcesses(processesCopyMachines);
+           System.out.println("Copie du fichier machines.txt effectuée.");
 
-            // Lancer la phase de map sur les machines
-            List<Process> processesMap = runMapPhase(machines);
+           // Lancer la phase de map sur les machines
+           List<Process> processesMap = runMapPhase(machines);
 
-            // Attendre que tous les SLAVES se terminent
-            waitForProcesses(processesMap);
+           // Attendre que tous les SLAVES se terminent
+           waitForProcesses(processesMap);
 
-            System.out.println("MAP FINISHED");
+           System.out.println("MAP FINISHED");
         } catch (IOException e) {
             e.printStackTrace();
         }
