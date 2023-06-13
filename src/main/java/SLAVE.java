@@ -1,5 +1,7 @@
 import java.io.*;
+import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -14,9 +16,11 @@ public class SLAVE {
 
     private static final String MACHINES_FILE = HOME_DIRECTORY + "/machines.txt";
 
-    private static final int PORT = 8888;
-
     private static final HashMap<Integer, String> machines = new HashMap<>();
+    private static final ArrayList<Socket> clients = new ArrayList<>();
+    private static final ArrayList<ServerSocket> servers = new ArrayList<>();
+    private static final String MASTER_ADDRESS = "tp-3a101-00.enst.fr";
+    private static final int PORT = 8888;
 
 
     public SLAVE(int mode, String inputFile) {

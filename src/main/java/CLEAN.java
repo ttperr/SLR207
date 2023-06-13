@@ -13,6 +13,10 @@ public class CLEAN {
     private static final String RESULT_DIRECTORY = "results";
 
     public static void main(String[] args) {
+        new CLEAN();
+    }
+
+    public CLEAN() {
         try {
             // Lire le fichier "machines.txt"
             Path machinesFilePath = Path.of(MACHINES_FILE);
@@ -36,8 +40,7 @@ public class CLEAN {
                     if (exitCode == 0) {
                         System.out.println("Répertoire supprimé sur la machine " + machineNumber + ": " + ipAddress);
                     } else {
-                        System.err.println("Erreur lors de la suppression du répertoire sur la machine " + machineNumber
-                                + ": " + ipAddress);
+                        showErrorMessage("Erreur lors de la suppression du répertoire sur la machine " + machineNumber + ": " + ipAddress, process);
                     }
 
                     if (machineNumber != 0 && machineNumber % 5 == 0) {
@@ -51,9 +54,24 @@ public class CLEAN {
             // Suppression du dossier results
             Runtime.getRuntime().exec("rm -rf " + RESULT_DIRECTORY);
 
+            // Suppression du dossier tmp
+            Runtime.getRuntime().exec("rm -rf tmp");
+
             System.out.println("\nNettoyage terminé");
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
+    private void showErrorMessage(String message, Process process) throws IOException {
+        System.err.println("-".repeat(80));
+
+        System.err.println(message);
+        // Print error stream
+        process.getErrorStream().transferTo(System.err);
+
+        System.err.println("-".repeat(80));
+        System.exit(1);
+    }
+
 }
