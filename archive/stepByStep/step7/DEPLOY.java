@@ -71,7 +71,7 @@ public class DEPLOY {
 
                 try {
                     // Vérifier la connexion SSH en exécutant la commande "hostname" à distance
-                    ProcessBuilder sshPb = new ProcessBuilder("serv_ssh", machine, "hostname");
+                    ProcessBuilder sshPb = new ProcessBuilder("ssh", machine, "hostname");
                     Process sshProcess = sshPb.start();
                     int sshExitCode = sshProcess.waitFor();
 
@@ -81,7 +81,7 @@ public class DEPLOY {
                                 .println("\nConnexion SSH réussie sur la machine " + machineNumber + ": " + ipAddress);
 
                         // Créer le répertoire dans /tmp s'il n'existe pas déjà
-                        ProcessBuilder mkdirPb = new ProcessBuilder("serv_ssh", machine, "mkdir", "-p", REMOTE_DIR);
+                        ProcessBuilder mkdirPb = new ProcessBuilder("ssh", machine, "mkdir", "-p", REMOTE_DIR);
                         Process mkdirProcess = mkdirPb.start();
                         int mkdirExitCode = mkdirProcess.waitFor();
 
