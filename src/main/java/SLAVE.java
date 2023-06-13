@@ -1,6 +1,5 @@
-package serv_ssh;
-
 import java.io.*;
+import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -15,11 +14,89 @@ public class SLAVE {
 
     private static final String MACHINES_FILE = HOME_DIRECTORY + "/machines.txt";
 
+    private static final int PORT = 8888;
+
+    // Enum where mode 0 = split, mode 1 = map, mode 2 = reduce and 9 = init
+    private enum Mode {
+        MAP(0), SHUFFLE(1), REDUCE(2), INIT(9);
+
+        private final int value;
+
+        private Mode(int value) {
+            this.value = value;
+        }
+
+        public int getValue() {
+            return value;
+        }
+    }
+
     private static final HashMap<Integer, String> machines = new HashMap<>();
 
-    public static void main(String[] args) {
-        if (args.length > 2) {
-            System.err.println("Usage: java SLAVE <mode> <inputFile>");
+
+    public SLAVE(int mode, String inputFile) {
+        if (mode == Mode.MAP.getValue()) {
+            launchMap(inputFile);
+        } else if (mode == Mode.SHUFFLE.getValue()) {
+            launchShuffle(inputFile);
+            processShuffleOutput();
+        } else {
+            System.err.println("Invalid mode.");
+            System.err.println("Usage: java -jar SLAVE.jar <mode> <inputFile>");
+            System.exit(1);
+        }
+    }
+    public SLAVE(int mode) {
+        if (mode == Mode.REDUCE.getValue()) {
+            launchReduce();
+        } else {
+            System.err.println("Invalid mode.");
+            System.err.println("Usage: java -jar SLAVE.jar <mode>");
+            System.exit(1);
+        }
+    }
+
+    public SLAVE(int mode, String serverAddress, int port) throws InterruptedException {
+        if (mode == Mode.INIT.getValue()) {
+            System.out.println("Connecting to " + serverAddress + " on port " + port);
+            try {
+                Socket clientSocket = new Socket(serverAddress, port);
+                BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+
+                System.out.println("Connected to " + serverAddress + " on port " + port);
+
+                String line;
+                while (true) {
+                    line = reader.readLine();
+                    System.out.println("Received: " + line);
+                    if (line.equals("quit")) {
+                        break;
+                    }
+                    // Execute line
+                    Process process = Runtime.getRuntime().exec(line);
+                    int code = process.waitFor();
+                    System.out.println("Code: " + code);
+                    // Send back done.
+                    writer.write(code + "\n");
+                    writer.flush();
+                }
+                reader.close();
+                writer.close();
+                clientSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            System.err.println("Invalid mode.");
+            System.err.println("Usage: java -jar SLAVE.jar <mode> <serverAddress> <port>");
+            System.exit(1);
+        }
+    }
+
+    public static void main(String[] args) throws NumberFormatException, InterruptedException {
+        if (args.length > 3) {
+            System.err.println("Usage: java -jar SLAVE.jar <mode> <inputFile || serverAddress> <port>");
             return;
         }
 
@@ -30,22 +107,16 @@ public class SLAVE {
         File machinesFile = new File(MACHINES_FILE);
         getMachines(machinesFile);
 
-        if (mode == 0) {
-            String inputFile = args[1];
-            System.out.println("Input file: " + inputFile);
-            processSplit(inputFile);
-        } else if (mode == 1) {
-            String inputFile = args[1];
-            processMapOutput(inputFile);
-            processShuffleOutput();
-        } else if (mode == 2) {
-            processReduceOutput();
+        if (args.length == 1) {
+            new SLAVE(mode);
+        } else if (args.length == 2) {
+            new SLAVE(mode, args[1]);
         } else {
-            System.err.println("Invalid mode.");
+            new SLAVE(mode, args[1], Integer.parseInt(args[2]));
         }
     }
 
-    private static void processSplit(String inputFile) {
+    private static void launchMap(String inputFile) {
         try {
             BufferedReader reader = new BufferedReader(new FileReader(inputFile));
             String line;
@@ -90,7 +161,7 @@ public class SLAVE {
         }
     }
 
-    private static void processMapOutput(String inputFile) {
+    private static void launchShuffle(String inputFile) {
         try {
             BufferedReader reader = new BufferedReader(new FileReader(inputFile));
             File shuffleDirectory = new File(SHUFFLE_DIRECTORY);
@@ -160,7 +231,7 @@ public class SLAVE {
         }
     }
 
-    private static void processReduceOutput() {
+    private static void launchReduce() {
         try {
             File reduceDirectory = new File(REDUCE_DIRECTORY);
             reduceDirectory.mkdirs();

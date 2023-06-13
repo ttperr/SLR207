@@ -1,5 +1,3 @@
-package serv_v1;
-
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
