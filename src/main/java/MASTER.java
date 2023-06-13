@@ -56,7 +56,7 @@ public class MASTER {
         System.out.println("Waiting for clients...");
 
         // Dire aux clients de se connecter
-        connectToMachines(machines);
+        //connectToMachines(machines);
 
         while (clients.size() < machines.size()) {
             try {
@@ -111,18 +111,21 @@ public class MASTER {
         waitForCommand(clients);
         System.out.println("REDUCE FINISHED");
 
-        /*****************  RÉCUPÉRATION DE RÉSULTATS *****************
-         // Copier les fichiers de reduce vers la machine locale
-         List<Process> processesResults = runResultPhase(machines);
+        /* ****************  RÉCUPÉRATION DE RÉSULTATS *****************
 
-         // Attendre que tous les SCP se terminent
-         waitForProcesses(processesResults);
-         System.out.println("Résultats récupérés.");
+        // Copier les fichiers de reduce vers la machine locale
+        List<Process> processesResults = runResultPhase(machines);
 
-         // Merge les résultats
-         mergeResults();
-         System.out.println("Résultats fusionnés et présents dans result.txt");
-         */
+        // Attendre que tous les SCP se terminent
+        waitForProcesses(processesResults);
+        System.out.println("Résultats récupérés.");
+
+        // Merge les résultats
+        mergeResults();
+        System.out.println("Résultats fusionnés et présents dans result.txt");
+
+        */
+
         // Ferme tous les clients
         clients.forEach(ClientHandler::close);
         System.out.println("Finished.");
