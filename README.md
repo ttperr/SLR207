@@ -178,4 +178,14 @@ les serveurs. Après de longue réflexion de comment gérer tout cela j'ai enfin
 * DEPLOY : Envoi du slave.jar et du machines.txt (en créant le dossier sur l'ordinateur master comme ça il n'y a besoin que d'un seul scp)
 * SLAVE : Plusieurs mode mais le mode 10 est l'initialisation des sockets. Ainsi, il faut que chaque machine crée un socket serveur et attende une connexion. Ensuite, quitte à utiliser la fonction ``isServerSocketOpen(String host, int port)``, le master envoie une demande de connexion en temps que client à chaque machine et récupère ainsi une liste de serveur. Ensuite, il dit à chaque serveur de se connecter à tous les autres serveurs (par message socket). Ainsi, chaque serveur est connecté à tous les autres serveurs.
 
+## Idée finale
+
+Finalement cela ne marche mais, du coup, j'ai trouvé un moyen et cela marche.
+
+Chaque machine est un serveur et le master est un client de tous les serveurs. Ainsi, le master peut envoyer des messages à tous les serveurs et les serveurs peuvent envoyer des messages au master. Il n'y a plus de mode et ainsi les requêtes sont envoyées dans le sens ou chaque SLAVE doit effectuer une fonction.
+
+Cependant, lors de la phase shuffle, les mots ""repassent"" par le master ce qui peut être un peu lourd en terme de nombre de messages.
+
 ## Procédure de lancement
+
+Pour lancer le programme, il faut lancer le programme java ``CLEAN`. Puis le programme java ``DEPLOY`. Puis enfin le programme java ``MASTER`.

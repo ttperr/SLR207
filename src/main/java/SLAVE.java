@@ -47,34 +47,42 @@ public class SLAVE {
             readerMaster = new BufferedReader(new InputStreamReader(masterSocket.getInputStream()));
             writerMaster = new PrintWriter(masterSocket.getOutputStream(), true);
 
-            System.out.println("Connected to : " + masterSocket.getInetAddress().getCanonicalHostName() + " on port " + PORT);
-
-            // Send HELLO to master.
-            writerMaster.println("HELLO");
+            System.out.println(
+                    "Connected to : " + masterSocket.getInetAddress().getCanonicalHostName() + " on port " + PORT);
 
             String line;
             while (true) {
                 line = readerMaster.readLine();
                 System.out.println("Received: " + line);
+
                 if (line.equals("QUIT")) {
                     break;
+
                 } else if (line.startsWith("launchMap")) {
                     String inputFile = line.split(" ")[1];
                     launchMap(inputFile);
                     sayDone();
+
                 } else if (line.startsWith("launchShuffle")) {
                     String inputFile = line.split(" ")[1];
                     launchShuffle(inputFile);
                     processShuffleOutput();
                     sayDone();
-                } else if (line.startsWith("Shuffle: ")) {
-                    String shuffleReceived = line.split(" ")[1];
+
+                } else if (line.startsWith("ShuffleReceived: ")) {
+                    String shuffleReceived = line.substring("ShuffleReceived: ".length());
                     processShuffleReceived(shuffleReceived);
+
                 } else if (line.equals("launchReduce")) {
                     launchReduce();
                     sayDone();
+
+                } else if (line.startsWith("launchResult")) {
+                    launchResult();
+                    sayDone();
+
                 } else if (line.startsWith("runCommand")) {
-                    String command = line.split(" ")[1];
+                    String command = line.substring("runCommand ".length());
 
                     // Execute line command.
                     Process process = Runtime.getRuntime().exec(command);
@@ -83,6 +91,7 @@ public class SLAVE {
 
                     // Send back done.
                     sayDone();
+
                 } else {
                     System.err.println("Invalid command.");
                 }
@@ -98,7 +107,7 @@ public class SLAVE {
     }
 
     private void sayDone() throws IOException {
-        writerMaster.println("done.");
+        writerMaster.println("DONE.");
     }
 
     private void launchMap(String inputFile) {
@@ -179,6 +188,45 @@ public class SLAVE {
         }
     }
 
+    private void processShuffleOutput() {
+        try {
+            File shuffleReceivedDirectory = new File(SHUFFLE_RECEIVED_DIRECTORY);
+            shuffleReceivedDirectory.mkdirs();
+            File shuffleDirectory = new File(SHUFFLE_DIRECTORY);
+            File[] shuffleFiles = shuffleDirectory.listFiles();
+
+            assert shuffleFiles != null;
+            for (File shuffleFile : shuffleFiles) {
+                String hashString = shuffleFile.getName().split("-")[0];
+                int hash = Integer.parseInt(hashString);
+                int machineNumber = hash % machines.size();
+                
+                if(!machines.get(machineNumber).equals(shuffleFile.getName().substring(hashString.length() + 1, shuffleFile.getName().indexOf(".txt")))) {
+                    System.err.println("Machine number: " + machineNumber);
+                    System.err.println(machines.get(machineNumber));
+                    System.err.println(shuffleFile.getName().substring(hashString.length(), shuffleFile.getName().indexOf(".txt")));
+                    throw new IllegalStateException("Wrong machine number");
+                }
+
+                if (machineNumber == machineId) {
+                    Runtime.getRuntime().exec("cp " + shuffleFile.getAbsolutePath() + " " + SHUFFLE_RECEIVED_DIRECTORY);
+                } else {
+                    // Read the line of the file
+                    BufferedReader reader = new BufferedReader(new FileReader(shuffleFile));
+                    String line = reader.readLine();
+                    reader.close();
+
+                    writerMaster.println("Send: " + machineNumber);
+                    writerMaster.println(line);
+
+                    System.out.println("Message sent to machine " + machineNumber + ": " + line);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void processShuffleReceived(String shuffleReceived) {
         try {
             String key = shuffleReceived.split(", ")[0];
@@ -192,55 +240,6 @@ public class SLAVE {
             writer.write(shuffleReceived);
             writer.newLine();
             writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void getMachines(File machinesFile) {
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader(machinesFile));
-            String line;
-            int machineNumber = 0;
-            while ((line = reader.readLine()) != null) {
-                machines.put(machineNumber, line);
-                if (line.equals(InetAddress.getLocalHost().getHostAddress()))
-                    machineId = machineNumber;
-                machineNumber++;
-            }
-            reader.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void processShuffleOutput() {
-        try {
-            File shuffleReceivedDirectory = new File(SHUFFLE_RECEIVED_DIRECTORY);
-            shuffleReceivedDirectory.mkdirs();
-            File shuffleDirectory = new File(SHUFFLE_DIRECTORY);
-            File[] shuffleFiles = shuffleDirectory.listFiles();
-
-            assert shuffleFiles != null;
-            for (File shuffleFile : shuffleFiles) {
-                int hash = Integer.parseInt(shuffleFile.getName().split("-")[0]);
-                int machineNumber = hash % machines.size();
-                // String ipAddress = machines.get(hash % machines.size());
-                // String machineDirectory = String.format("%s@%s:%s", USERNAME, ipAddress,
-                // SHUFFLE_RECEIVED_DIRECTORY);
-
-                if (machineNumber == machineId) {
-                    Runtime.getRuntime().exec("cp " + shuffleFile.getAbsolutePath() + " " + SHUFFLE_RECEIVED_DIRECTORY);
-                } else {
-                    // Read the line of the file
-                    BufferedReader reader = new BufferedReader(new FileReader(shuffleFile));
-                    String line = reader.readLine();
-                    reader.close();
-
-                    writerMaster.println("Send: " + machineNumber);
-                    writerMaster.println(line);
-                }
-            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -292,4 +291,37 @@ public class SLAVE {
         }
     }
 
+    private void launchResult() {
+        File reduceDirectory = new File(REDUCE_DIRECTORY);
+        File[] reduceFiles = reduceDirectory.listFiles();
+
+        assert reduceFiles != null;
+        for (File reduceFile : reduceFiles) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(reduceFile))) {
+                String line;
+                line = reader.readLine();
+                writerMaster.println("Results: " + line);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void getMachines(File machinesFile) {
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(machinesFile));
+            String line;
+            int machineNumber = 0;
+            while ((line = reader.readLine()) != null) {
+                machines.put(machineNumber, line);
+                if (line.equals(InetAddress.getLocalHost().getCanonicalHostName()))
+                    machineId = machineNumber;
+                machineNumber++;
+            }
+            reader.close();
+            System.out.println("Machine: " + machineId);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

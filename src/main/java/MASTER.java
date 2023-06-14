@@ -1,5 +1,6 @@
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -15,7 +16,6 @@ public class MASTER {
     private static final String HOME_DIRECTORY = "/tmp/" + USERNAME;
     private static final String SPLIT_DIRECTORY_REMOTE = HOME_DIRECTORY + "/splits";
     private static final String MAP_DIRECTORY_REMOTE = HOME_DIRECTORY + "/maps";
-    private static final String REDUCES_DIRECTORY_REMOTE = HOME_DIRECTORY + "/reduces";
 
     private static final String RESULT_DIRECTORY = "results";
 
@@ -36,32 +36,20 @@ public class MASTER {
 
         machines.forEach(ipAddress -> {
             System.out.println("Connecting to " + ipAddress);
-            while(!isServerSocketOpen(ipAddress, PORT)) {
+            while (!isServerSocketOpen(ipAddress, PORT)) {
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
-            try {
-                ServerHandler server = new ServerHandler(ipAddress, machines);
-
-                servers.add(server);
-                System.out.println("Connected to " + ipAddress);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
         });
 
-
     }
-
 
     public void start() {
 
         System.out.println("Master connected. Starting map phase...");
-
-        servers.forEach(server -> server.sendCommand("hello world"));
 
         // Créer les répertoires sur les machines
         createSplitDirectoryOnMachines();
@@ -91,20 +79,13 @@ public class MASTER {
         waitForCommand();
         System.out.println("REDUCE FINISHED");
 
-        /* ****************  RÉCUPÉRATION DE RÉSULTATS *****************
-
         // Copier les fichiers de reduce vers la machine locale
-        List<Process> processesResults = runResultPhase(machines);
+        runResultPhase();
 
-        // Attendre que tous les SCP se terminent
-        waitForProcesses(processesResults);
-        System.out.println("Résultats récupérés.");
+        // Attendre que tous les SLAVES se terminent
+        waitForCommand();
 
-        // Merge les résultats
-        mergeResults();
-        System.out.println("Résultats fusionnés et présents dans result.txt");
-
-        */
+        System.out.println("Résultats fusionnés et présents dans results/result.txt");
 
         // Ferme tous les clients
         servers.forEach(ServerHandler::close);
@@ -142,64 +123,8 @@ public class MASTER {
         servers.forEach(server -> server.sendCommand("launchReduce"));
     }
 
-    private List<Process> runResultPhase(List<String> machines) {
-        List<Process> processes = new ArrayList<>();
-
-        machines.forEach(ipAddress -> {
-            String machineDirectory = String.format("%s@%s:%s", USERNAME, ipAddress, REDUCES_DIRECTORY_REMOTE);
-
-            try {
-                // Copier le fichier sur la machine distante
-                ProcessBuilder pb = new ProcessBuilder("scp", "-r",
-                        machineDirectory, RESULT_DIRECTORY + File.separator);
-                Process process = pb.start();
-                processes.add(process);
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
-
-        return processes;
-    }
-
-    private void mergeResults() {
-        try {
-            // Check if there is a results directory
-            File resultsDirectory = new File(RESULT_DIRECTORY);
-            if (!resultsDirectory.exists()) {
-                System.err.println("Le répertoire " + RESULT_DIRECTORY + " n'existe pas.");
-                return;
-            }
-
-            // Check if there are files in the results directory
-            File[] resultFiles = resultsDirectory.listFiles();
-
-            if (resultFiles == null || resultFiles.length == 0) {
-                System.err.println("Le répertoire " + RESULT_DIRECTORY + " est vide.");
-                return;
-            }
-
-            // Merge the files
-            Runtime.getRuntime().exec("cat " + RESULT_DIRECTORY + "/*.txt > " + RESULT_DIRECTORY + "/result.txt");
-            System.out.println("Fusion des résultats effectuée.");
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void waitForProcesses(List<Process> processes) {
-        processes.forEach(process -> {
-            try {
-                int exitCode = process.waitFor();
-                if (exitCode != 0) {
-                    throw new IllegalStateException("Process exited with code " + exitCode);
-                }
-            } catch (InterruptedException | IllegalStateException e) {
-                e.printStackTrace();
-            }
-        });
+    private void runResultPhase() {
+        servers.forEach(server -> server.sendCommand("launchResult"));
     }
 
     private void waitForCommand() {
@@ -213,8 +138,6 @@ public class MASTER {
         private final int machineId;
         private final String ipAddress;
 
-
-
         public ServerHandler(String ipAddress, List<String> authorizedMachines) throws IOException {
             this.ipAddress = ipAddress;
             this.machineId = authorizedMachines.indexOf(ipAddress);
@@ -224,15 +147,6 @@ public class MASTER {
             this.clientSocket = new Socket(ipAddress, PORT);
             this.in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             this.out = new PrintWriter(clientSocket.getOutputStream(), true);
-
-            // Send the machine id to the client
-            String line = in.readLine();
-            System.out.println("Received: " + line);
-            if (line.equals("HELLO")) {
-                out.println(machineId);
-            } else {
-                throw new IOException("Error on machine " + machineId + ": " + ipAddress);
-            }
         }
 
         @Override
@@ -240,7 +154,7 @@ public class MASTER {
             try {
                 String clientMessage;
                 while ((clientMessage = in.readLine()) != null) {
-                    if (clientMessage.equals("done.")) {
+                    if (clientMessage.equals("DONE.")) {
                         break;
                     } else if (clientMessage.startsWith("Send: ")) {
                         System.out.println("Message from machine " + machineId + ": " + ipAddress);
@@ -252,11 +166,26 @@ public class MASTER {
                         servers.get(machineToSend).sendCommand("ShuffleReceived: " + messageToSend);
 
                         System.out.println("Message sent to machine " + machineToSend + ": " + messageToSend);
+                    } else if (clientMessage.startsWith("Results: ")) {
+                        String results = clientMessage.substring("Results: ".length());
+                        System.out.println("Results from machine " + machineId + ": " + ipAddress);
+
+                        // Create the result directory if it doesn't exist
+                        File resultDirectory = new File(RESULT_DIRECTORY);
+                        if (!resultDirectory.exists()) {
+                            resultDirectory.mkdir();
+                        }
+
+                        // Write the results to the file without deleting the previous results
+                        FileWriter fileWriter = new FileWriter(RESULT_DIRECTORY + File.separator + "result.txt", true);
+                        PrintWriter printWriter = new PrintWriter(fileWriter);
+                        printWriter.println(results);
+                        fileWriter.close();
                     } else {
                         System.err.println("Error on machine " + machineId + ": " + ipAddress);
                     }
                 }
-                System.out.println("done for machine " + machineId + ": " + ipAddress);
+                System.out.println("Done for machine " + machineId + ": " + ipAddress);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -284,9 +213,12 @@ public class MASTER {
 
     }
 
+    public boolean isServerSocketOpen(String host, int port) {
+        try {
+            ServerHandler server = new ServerHandler(host, machines);
 
-    public static boolean isServerSocketOpen(String host, int port) {
-        try (Socket ignored = new Socket(host, port)) {
+            servers.add(server);
+            System.out.println("Connected to " + host + ":" + port);
             return true; // La connexion a réussi, le socket serveur est ouvert
         } catch (Exception e) {
             return false; // La connexion a échoué, le socket serveur est fermé ou inaccessible

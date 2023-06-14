@@ -131,14 +131,9 @@ public class DEPLOY {
                         System.out.println("Fichiers copiés sur la machine " + machineNumber + ": " + ipAddress);
 
                         // Lancer le programme sur la machine distante
-                        //ProcessBuilder sshPb = new ProcessBuilder("ssh", machine, "java", "-jar", REMOTE_DIR + File.separator + SLAVE_JAR);
-                        //Process sshProcess = sshPb.start();
-                        //int sshExitCode = sshProcess.waitFor();
-                        //if (sshExitCode == 0) {
-                        //    System.out.println("Programme lancé sur la machine " + machineNumber + ": " + ipAddress);
-                        //} else {
-                        //    showErrorMessage("Erreur lors du lancement du programme sur la machine " + machineNumber + ": " + ipAddress, sshProcess);
-                        //}
+                        ProcessBuilder sshPb = new ProcessBuilder("ssh", machine, "java", "-jar", REMOTE_DIR + File.separator + SLAVE_JAR);
+                        sshPb.start();
+                        System.out.println("Programme lancé sur la machine " + machineNumber + ": " + ipAddress);
                     } else {
                         showErrorMessage("Erreur lors de la copie des fichiers sur la machine " + machineNumber + ": " + ipAddress, scpProcess);
                     }
