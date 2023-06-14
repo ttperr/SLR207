@@ -7,7 +7,8 @@ import java.util.List;
 public class DEPLOY {
     private static final String USERNAME = "tperrot-21";
 
-    private static final String REMOTE_DIR = "/tmp/" + USERNAME;
+    private static final String TEMP_DIR = "/tmp";
+    private static final String REMOTE_DIR = TEMP_DIR + "/" + USERNAME;
 
     private static final String PROJECT_DIR = "src/main";
     private static final String SRC_DIR = PROJECT_DIR + "/java";
@@ -15,7 +16,8 @@ public class DEPLOY {
     private static final String SLAVE = "SLAVE";
     private static final String SLAVE_JAR = "SLAVE.jar";
 
-    private static final String MACHINES_FILE = "data/machines.txt";
+    private static final String DATA_DIR = "data/";
+    private static final String MACHINES_FILE = DATA_DIR + "machines.txt";
 
     public static void main(String[] args) {
         new DEPLOY();
@@ -100,7 +102,7 @@ public class DEPLOY {
                 showErrorMessage("Erreur lors du déplacement du fichier SLAVE.jar", moveJarToDirProcess);
             }
 
-            ProcessBuilder moveMachinesFileToDir = new ProcessBuilder("cp", MACHINES_FILE, "." + REMOTE_DIR);
+            ProcessBuilder moveMachinesFileToDir = new ProcessBuilder("cp", "-r", DATA_DIR + ".", "." + REMOTE_DIR);
             Process moveMachinesFileToDirProcess = moveMachinesFileToDir.start();
             int moveMachinesFileToDirExitCode = moveMachinesFileToDirProcess.waitFor();
 
@@ -120,13 +122,23 @@ public class DEPLOY {
 
                 try {
                     // Copier le fichier "SLAVE.jar" dans le répertoire distant
-                    ProcessBuilder scpPb = new ProcessBuilder("scp", "-r", "." + REMOTE_DIR, machine + ":");
+                    ProcessBuilder scpPb = new ProcessBuilder("scp", "-r", "." + REMOTE_DIR, machine + ":" + TEMP_DIR);
                     Process scpProcess = scpPb.start();
                     int scpExitCode = scpProcess.waitFor();
 
                     if (scpExitCode == 0) {
                         // La copie du fichier s'est terminée avec succès
                         System.out.println("Fichiers copiés sur la machine " + machineNumber + ": " + ipAddress);
+
+                        // Lancer le programme sur la machine distante
+                        //ProcessBuilder sshPb = new ProcessBuilder("ssh", machine, "java", "-jar", REMOTE_DIR + File.separator + SLAVE_JAR);
+                        //Process sshProcess = sshPb.start();
+                        //int sshExitCode = sshProcess.waitFor();
+                        //if (sshExitCode == 0) {
+                        //    System.out.println("Programme lancé sur la machine " + machineNumber + ": " + ipAddress);
+                        //} else {
+                        //    showErrorMessage("Erreur lors du lancement du programme sur la machine " + machineNumber + ": " + ipAddress, sshProcess);
+                        //}
                     } else {
                         showErrorMessage("Erreur lors de la copie des fichiers sur la machine " + machineNumber + ": " + ipAddress, scpProcess);
                     }
