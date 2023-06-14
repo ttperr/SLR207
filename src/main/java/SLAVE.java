@@ -49,6 +49,12 @@ public class SLAVE {
 
             System.out.println("Connected to master on port " + PORT);
 
+            // Send machine id to master.
+            InetAddress localhost = InetAddress.getLocalHost();
+            String hostName = localhost.getHostName();
+            System.out.println("Host name: " + hostName);
+            writerMaster.write(hostName + "\n");
+
             String line;
             while (true) {
                 line = readerMaster.readLine();
@@ -76,7 +82,7 @@ public class SLAVE {
                 } else if (line.startsWith("runCommand")) {
                     String command = line.split(" ")[1];
 
-                    // Execute line
+                    // Execute line command.
                     Process process = Runtime.getRuntime().exec(command);
                     int code = process.waitFor();
                     System.out.println("Code: " + code);
@@ -87,6 +93,7 @@ public class SLAVE {
                     System.err.println("Invalid command.");
                 }
             }
+            System.out.println("Closing connection...");
             readerMaster.close();
             writerMaster.close();
             masterSocket.close();

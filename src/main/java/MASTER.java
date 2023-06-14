@@ -21,7 +21,7 @@ public class MASTER {
 
     private static final String MACHINES_FILE = "data/machines.txt";
 
-    private final List<ServerHandler> servers; // Liste des clients connectés
+    private static final List<ServerHandler> servers = new ArrayList<>(); // Liste des clients connectés
     private List<String> machines = new ArrayList<>();
     private static final int PORT = 8888;
 
@@ -31,8 +31,6 @@ public class MASTER {
     }
 
     public MASTER() {
-        servers = new ArrayList<>();
-
         // Lire le fichier "machines.txt"
         getMachines();
 
@@ -46,7 +44,9 @@ public class MASTER {
                 }
             }
             try {
-                servers.add(new ServerHandler(ipAddress, machines));
+                ServerHandler server = new ServerHandler(ipAddress, machines);
+
+                servers.add(server);
                 System.out.println("Connected to " + ipAddress);
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -61,32 +61,34 @@ public class MASTER {
 
         System.out.println("Master connected. Starting map phase...");
 
+        servers.forEach(server -> server.sendCommand("hello world"));
+
         // Créer les répertoires sur les machines
-        createSplitDirectoryOnMachines(servers);
-        waitForCommand(servers);
+        createSplitDirectoryOnMachines();
+        waitForCommand();
 
         System.out.println("Répertoires créés sur les machines.");
 
         // Lancer la phase de map sur les machines
-        runMapPhase(servers);
+        runMapPhase();
 
         // Attendre que tous les SLAVES se terminent
-        waitForCommand(servers);
+        waitForCommand();
 
         System.out.println("MAP FINISHED");
 
         // Lancer la phase de shuffle sur les machines
-        runShufflePhase(servers);
+        runShufflePhase();
 
         // Attendre que tous les SLAVES se terminent
-        waitForCommand(servers);
+        waitForCommand();
         System.out.println("SHUFFLE FINISHED");
 
         // Lancer la phase reduce sur les machines
-        runReducePhase(servers);
+        runReducePhase();
 
         // Attendre que tous les SLAVES se terminent
-        waitForCommand(servers);
+        waitForCommand();
         System.out.println("REDUCE FINISHED");
 
         /* ****************  RÉCUPÉRATION DE RÉSULTATS *****************
@@ -120,24 +122,24 @@ public class MASTER {
         }
     }
 
-    private void createSplitDirectoryOnMachines(List<ServerHandler> clients) {
-        clients.forEach(client -> client.sendCommand("runCommand mkdir -p " + SPLIT_DIRECTORY_REMOTE));
+    private void createSplitDirectoryOnMachines() {
+        servers.forEach(client -> client.sendCommand("runCommand mkdir -p " + SPLIT_DIRECTORY_REMOTE));
 
     }
 
-    private void runMapPhase(List<ServerHandler> clients) {
-        clients.forEach(client -> client.sendCommand("launchMap " +
+    private void runMapPhase() {
+        servers.forEach(client -> client.sendCommand("launchMap " +
                 SPLIT_DIRECTORY_REMOTE + File.separator + "S" + client.getMachineId() + ".txt"));
     }
 
-    private void runShufflePhase(List<ServerHandler> clients) {
-        clients.forEach(client -> client.sendCommand("launchShuffle " +
+    private void runShufflePhase() {
+        servers.forEach(client -> client.sendCommand("launchShuffle " +
                 MAP_DIRECTORY_REMOTE + File.separator + "UM" + client.getMachineId() + ".txt"));
 
     }
 
-    private void runReducePhase(List<ServerHandler> clients) {
-        clients.forEach(client -> client.sendCommand("launchReduce"));
+    private void runReducePhase() {
+        servers.forEach(server -> server.sendCommand("launchReduce"));
     }
 
     private List<Process> runResultPhase(List<String> machines) {
@@ -200,11 +202,11 @@ public class MASTER {
         });
     }
 
-    private void waitForCommand(List<ServerHandler> servers) {
+    private void waitForCommand() {
         servers.forEach(ServerHandler::waitDone);
     }
 
-    private class ServerHandler extends Thread {
+    private static class ServerHandler extends Thread {
         private final Socket clientSocket;
         private final BufferedReader in; // receive 0 if the command went well, the error otherwise
         private final PrintWriter out; // send all the commands to the client
@@ -222,6 +224,8 @@ public class MASTER {
             this.clientSocket = new Socket(ipAddress, PORT);
             this.in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             this.out = new PrintWriter(clientSocket.getOutputStream(), true);
+
+            in.readLine(); // read the welcome message
         }
 
         public void waitDone() {
