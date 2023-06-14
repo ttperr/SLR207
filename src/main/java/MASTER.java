@@ -21,7 +21,7 @@ public class MASTER {
 
     private static final String MACHINES_FILE = "data/machines.txt";
 
-    private static final List<ServerHandler> servers = new ArrayList<>(); // Liste des clients connectés
+    private final List<ServerHandler> servers = new ArrayList<>(); // Liste des clients connectés
     private List<String> machines = new ArrayList<>();
     private static final int PORT = 8888;
 
@@ -203,10 +203,10 @@ public class MASTER {
     }
 
     private void waitForCommand() {
-        servers.forEach(ServerHandler::waitDone);
+        servers.forEach(ServerHandler::run);
     }
 
-    private static class ServerHandler extends Thread {
+    private class ServerHandler extends Thread {
         private final Socket clientSocket;
         private final BufferedReader in; // receive 0 if the command went well, the error otherwise
         private final PrintWriter out; // send all the commands to the client
@@ -225,10 +225,18 @@ public class MASTER {
             this.in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             this.out = new PrintWriter(clientSocket.getOutputStream(), true);
 
-            in.readLine(); // read the welcome message
+            // Send the machine id to the client
+            String line = in.readLine();
+            System.out.println("Received: " + line);
+            if (line.equals("HELLO")) {
+                out.println(machineId);
+            } else {
+                throw new IOException("Error on machine " + machineId + ": " + ipAddress);
+            }
         }
 
-        public void waitDone() {
+        @Override
+        public void run() {
             try {
                 String clientMessage;
                 while ((clientMessage = in.readLine()) != null) {

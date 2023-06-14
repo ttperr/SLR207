@@ -5,7 +5,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -28,7 +28,7 @@ public class SLAVE {
     private int machineId;
 
     private BufferedReader readerMaster;
-    private BufferedWriter writerMaster;
+    private PrintWriter writerMaster;
 
     public static void main(String[] args) throws NumberFormatException, InterruptedException {
         new SLAVE();
@@ -45,22 +45,16 @@ public class SLAVE {
             Socket masterSocket = serverSocket.accept();
 
             readerMaster = new BufferedReader(new InputStreamReader(masterSocket.getInputStream()));
-            writerMaster = new BufferedWriter(new OutputStreamWriter(masterSocket.getOutputStream()));
+            writerMaster = new PrintWriter(masterSocket.getOutputStream(), true);
 
-            System.out.println("Connected to master on port " + PORT);
+            System.out.println("Connected to : " + masterSocket.getInetAddress().getCanonicalHostName() + " on port " + PORT);
 
-            // Send machine id to master.
-            InetAddress localhost = InetAddress.getLocalHost();
-            String hostName = localhost.getHostName();
-            System.out.println("Host name: " + hostName);
-            writerMaster.write(hostName + "\n");
+            // Send HELLO to master.
+            writerMaster.println("HELLO");
 
             String line;
             while (true) {
                 line = readerMaster.readLine();
-                if (line == null) {
-                    continue;
-                }
                 System.out.println("Received: " + line);
                 if (line.equals("QUIT")) {
                     break;
@@ -74,8 +68,8 @@ public class SLAVE {
                     processShuffleOutput();
                     sayDone();
                 } else if (line.startsWith("Shuffle: ")) {
-                  String shuffleReceived = line.split(" ")[1];
-                  processShuffleReceived(shuffleReceived);
+                    String shuffleReceived = line.split(" ")[1];
+                    processShuffleReceived(shuffleReceived);
                 } else if (line.equals("launchReduce")) {
                     launchReduce();
                     sayDone();
@@ -97,15 +91,14 @@ public class SLAVE {
             readerMaster.close();
             writerMaster.close();
             masterSocket.close();
+            serverSocket.close();
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }
 
     private void sayDone() throws IOException {
-        writerMaster.write("done.\n");
-        writerMaster.newLine();
-        writerMaster.flush();
+        writerMaster.println("done.");
     }
 
     private void launchMap(String inputFile) {
@@ -211,7 +204,7 @@ public class SLAVE {
             int machineNumber = 0;
             while ((line = reader.readLine()) != null) {
                 machines.put(machineNumber, line);
-                if(line.equals(InetAddress.getLocalHost().getHostAddress()))
+                if (line.equals(InetAddress.getLocalHost().getHostAddress()))
                     machineId = machineNumber;
                 machineNumber++;
             }
@@ -233,7 +226,8 @@ public class SLAVE {
                 int hash = Integer.parseInt(shuffleFile.getName().split("-")[0]);
                 int machineNumber = hash % machines.size();
                 // String ipAddress = machines.get(hash % machines.size());
-                // String machineDirectory = String.format("%s@%s:%s", USERNAME, ipAddress, SHUFFLE_RECEIVED_DIRECTORY);
+                // String machineDirectory = String.format("%s@%s:%s", USERNAME, ipAddress,
+                // SHUFFLE_RECEIVED_DIRECTORY);
 
                 if (machineNumber == machineId) {
                     Runtime.getRuntime().exec("cp " + shuffleFile.getAbsolutePath() + " " + SHUFFLE_RECEIVED_DIRECTORY);
@@ -243,11 +237,8 @@ public class SLAVE {
                     String line = reader.readLine();
                     reader.close();
 
-                    writerMaster.write("Send: " + machineNumber);
-                    writerMaster.newLine();
-                    writerMaster.write(line);
-                    writerMaster.newLine();
-                    writerMaster.flush();
+                    writerMaster.println("Send: " + machineNumber);
+                    writerMaster.println(line);
                 }
             }
         } catch (IOException e) {
