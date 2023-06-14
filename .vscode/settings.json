@@ -2,9 +2,4 @@
   "java.project.sourcePaths": [
     "src/main/java",
   ],
-  "java.project.referencedLibraries": [
-    "lib/**/*.jar",
-    "libs/json-20230227.jar"
-  ],
-  "java.configuration.updateBuildConfiguration": "interactive"
 }

@@ -6,6 +6,20 @@
   "configurations": [
     {
       "type": "java",
+      "name": "CLEAN",
+      "request": "launch",
+      "mainClass": "CLEAN",
+      "projectName": "SLR207-MapReduce"
+    },
+    {
+      "type": "java",
+      "name": "MASTER",
+      "request": "launch",
+      "mainClass": "MASTER",
+      "projectName": "SLR207-MapReduce"
+    },
+    {
+      "type": "java",
       "name": "TEST",
       "request": "launch",
       "mainClass": "TEST",

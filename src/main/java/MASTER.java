@@ -1,4 +1,8 @@
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,10 +17,7 @@ public class MASTER {
     private static final String MAP_DIRECTORY_REMOTE = HOME_DIRECTORY + "/maps";
     private static final String REDUCES_DIRECTORY_REMOTE = HOME_DIRECTORY + "/reduces";
 
-    private static final String SPLIT_DIRECTORY = "data/splits";
     private static final String RESULT_DIRECTORY = "results";
-
-    private static final String SLAVE = "SLAVE";
 
     private static final String MACHINES_FILE = "data/machines.txt";
 
@@ -122,50 +123,6 @@ public class MASTER {
     private void createSplitDirectoryOnMachines(List<ServerHandler> clients) {
         clients.forEach(client -> client.sendCommand("runCommand mkdir -p " + SPLIT_DIRECTORY_REMOTE));
 
-    }
-
-    private List<Process> copySplitsToMachines(List<String> machines) {
-        // Check if there is a data.splits directory
-        File splitsDirectory = new File(SPLIT_DIRECTORY);
-        if (!splitsDirectory.exists()) {
-            System.err.println("Le répertoire " + SPLIT_DIRECTORY + " n'existe pas.");
-            return null;
-        }
-
-        // Check if there are files in the data.splits directory
-        File[] splitFiles = splitsDirectory.listFiles();
-
-        if (splitFiles == null || splitFiles.length == 0) {
-            System.err.println("Le répertoire " + SPLIT_DIRECTORY + " est vide.");
-            return null;
-        }
-
-        // Check if there is the same number of files than the number of machines
-        if (splitFiles.length != machines.size()) {
-            System.err.println("Le nombre de fichiers dans le répertoire " + SPLIT_DIRECTORY
-                    + " n'est pas égal au nombre de machines.");
-            return null;
-        }
-
-        List<Process> processes = new ArrayList<>();
-
-        machines.forEach(ipAddress -> {
-            int machineNumber = machines.indexOf(ipAddress);
-            String machineDirectory = String.format("%s@%s:%s", USERNAME, ipAddress, SPLIT_DIRECTORY_REMOTE);
-
-            try {
-                // Copier le fichier sur la machine distante
-                ProcessBuilder pb = new ProcessBuilder("scp",
-                        SPLIT_DIRECTORY + File.separator + "S" + machineNumber + ".txt", machineDirectory);
-                Process process = pb.start();
-                processes.add(process);
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
-
-        return processes;
     }
 
     private void runMapPhase(List<ServerHandler> clients) {

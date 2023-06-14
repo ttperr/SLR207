@@ -1,4 +1,11 @@
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -15,8 +22,6 @@ public class SLAVE {
     private static final String REDUCE_DIRECTORY = HOME_DIRECTORY + "/reduces";
 
     private static final String MACHINES_FILE = HOME_DIRECTORY + "/machines.txt";
-
-    private static final String MASTER_ADDRESS = "tp-3a101-00.enst.fr";
 
     private static final int PORT = 8888;
     private final HashMap<Integer, String> machines = new HashMap<>();
