@@ -14,7 +14,7 @@ public class MASTER {
     private static final String USERNAME = "tperrot-21";
 
     private static final String HOME_DIRECTORY = "/tmp/" + USERNAME;
-    private static final String SPLIT_DIRECTORY_REMOTE = HOME_DIRECTORY + "/splits";
+    private static final String SPLIT_DIRECTORY_REMOTE = HOME_DIRECTORY + "/.";
     private static final String MAP_DIRECTORY_REMOTE = HOME_DIRECTORY + "/maps";
 
     private static final String RESULT_DIRECTORY = "results";

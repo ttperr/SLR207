@@ -22,7 +22,7 @@ public class DEPLOY {
     private static final String DATA_DIR = "data/";
     private static final String MACHINES_FILE = DATA_DIR + "machines.txt";
 
-    private static final String TEXT_FILE = "text/test.txt";
+    private static final String TEXT_FILE = "text/code.txt";
 
     public static void main(String[] args) {
         new DEPLOY();
@@ -47,7 +47,8 @@ public class DEPLOY {
                 System.out.println("Compilation terminée avec succès");
 
                 // Créer le fichier JAR
-                ProcessBuilder jarPb = new ProcessBuilder("jar", "cvfe", ".." + File.separator + SLAVE_JAR, SLAVE, SLAVE + ".class");
+                ProcessBuilder jarPb = new ProcessBuilder("jar", "cvfe", ".." + File.separator + SLAVE_JAR, SLAVE,
+                        SLAVE + ".class");
                 jarPb.directory(srcDirPath.toFile());
                 Process jarProcess = jarPb.start();
                 int jarExitCode = jarProcess.waitFor();
@@ -66,7 +67,7 @@ public class DEPLOY {
                         // Le fichier SLAVE.class a été supprimé avec succès
                         System.out.println("Fichier SLAVE.class supprimé avec succès");
 
-                        System.out.println("\nDéploiement sur les machines...");
+                        System.out.println("\nDéploiement sur les machines...\n");
                     } else {
                         showErrorMessage("Erreur lors de la suppression du fichier SLAVE.class", rmProcess);
                     }
@@ -84,7 +85,7 @@ public class DEPLOY {
 
             if (mkdirExitCode == 0) {
                 // Le répertoire a été créé avec succès
-                System.out.println("Répertoire créé avec succès");
+                System.out.println("Répertoire créé avec succès\n");
             } else {
                 System.err.println("-".repeat(80));
 
@@ -96,7 +97,8 @@ public class DEPLOY {
                 System.exit(1);
             }
 
-            ProcessBuilder moveJarToDir = new ProcessBuilder("mv", PROJECT_DIR + File.separator + SLAVE_JAR, "." + REMOTE_DIR);
+            ProcessBuilder moveJarToDir = new ProcessBuilder("mv", PROJECT_DIR + File.separator + SLAVE_JAR,
+                    "." + REMOTE_DIR);
             Process moveJarToDirProcess = moveJarToDir.start();
             int moveToDirExitCode = moveJarToDirProcess.waitFor();
 
@@ -109,17 +111,16 @@ public class DEPLOY {
 
             preProcessFile(TEXT_FILE, machines);
 
-            ProcessBuilder moveMachinesFileToDir = new ProcessBuilder("cp", "-r", DATA_DIR + ".", "." + REMOTE_DIR);
+            ProcessBuilder moveMachinesFileToDir = new ProcessBuilder("cp", MACHINES_FILE, "." + REMOTE_DIR);
             Process moveMachinesFileToDirProcess = moveMachinesFileToDir.start();
             int moveMachinesFileToDirExitCode = moveMachinesFileToDirProcess.waitFor();
 
             if (moveMachinesFileToDirExitCode == 0) {
                 // Le fichier a été déplacé avec succès
-                System.out.println("Fichier déplacé avec succès");
+                System.out.println("Fichier machines déplacé avec succès");
             } else {
                 showErrorMessage("Erreur lors du déplacement du fichier machines.txt", moveMachinesFileToDirProcess);
             }
-
 
             // Tester la connexion SSH sur chaque machine et copier le fichier "slave.jar"
             // si la connexion réussit
@@ -128,6 +129,20 @@ public class DEPLOY {
                 String machine = String.format("%s@%s", USERNAME, ipAddress);
 
                 try {
+
+                    // Copie du split dans le dossier .REMOTE_DIR
+                    ProcessBuilder moveSplitToDir = new ProcessBuilder("cp",
+                            DATA_DIR + "splits/S" + machineNumber + ".txt", "." + REMOTE_DIR);
+                    Process moveSplitToDirProcess = moveSplitToDir.start();
+                    int moveSplitToDirExitCode = moveSplitToDirProcess.waitFor();
+
+                    if (moveSplitToDirExitCode == 0) {
+                        // Le fichier a été déplacé avec succès
+                        System.out.println("\nFichier split S" + machineNumber + " déplacé avec succès");
+                    } else {
+                        showErrorMessage("Erreur lors du déplacement du fichier split", moveSplitToDirProcess);
+                    }
+
                     // Copier le fichier "SLAVE.jar" dans le répertoire distant
                     ProcessBuilder scpPb = new ProcessBuilder("scp", "-r", "." + REMOTE_DIR, machine + ":" + TEMP_DIR);
                     Process scpProcess = scpPb.start();
@@ -137,12 +152,30 @@ public class DEPLOY {
                         // La copie du fichier s'est terminée avec succès
                         System.out.println("Fichiers copiés sur la machine " + machineNumber + ": " + ipAddress);
 
-                        // Lancer le programme sur la machine distante
-                        ProcessBuilder sshPb = new ProcessBuilder("ssh", machine, "java", "-jar", REMOTE_DIR + File.separator + SLAVE_JAR);
-                        sshPb.start();
-                        System.out.println("Programme lancé sur la machine " + machineNumber + ": " + ipAddress);
+                        // Suppression du split du fichier .REMOTE_DIR
+                        ProcessBuilder rmSplit = new ProcessBuilder("rm",
+                                "." + REMOTE_DIR + File.separator + "S" + machineNumber + ".txt");
+                        Process rmSplitProcess = rmSplit.start();
+                        int rmSplitExitCode = rmSplitProcess.waitFor();
+
+                        if (rmSplitExitCode == 0) {
+                            // Le fichier a été supprimé avec succès
+                            System.out.println("Fichier split S" + machineNumber + " supprimé avec succès");
+
+                            // Lancer le programme sur la machine distante
+                            // ProcessBuilder sshPb = new ProcessBuilder("ssh", machine, "java", "-jar",
+                            // REMOTE_DIR + File.separator + SLAVE_JAR);
+                            // sshPb.start();
+                            // System.out.println(
+                            // "Programme lancé sur la machine " + machineNumber + ": " + ipAddress + "\n");
+
+                        } else {
+                            showErrorMessage("Erreur lors de la suppression du fichier split", rmSplitProcess);
+                        }
+
                     } else {
-                        showErrorMessage("Erreur lors de la copie des fichiers sur la machine " + machineNumber + ": " + ipAddress, scpProcess);
+                        showErrorMessage("Erreur lors de la copie des fichiers sur la machine " + machineNumber + ": "
+                                + ipAddress, scpProcess);
                     }
 
                     if (machineNumber != 0 && machineNumber % 5 == 0) {
@@ -175,11 +208,13 @@ public class DEPLOY {
         try {
             String content = Files.readString(file.toPath());
             content = content.replaceAll("\n ", " ");
-            content = content.replaceAll("\n", " ");
-            
+            content = content.replaceAll("[,\\n]|\\b\\W+\\b", " ");
+            content = content.replaceAll(" +", " ");
+
+
             // Split in nbMachines files but cut only at spaces
             int chunkSize = content.length() / nbMachines;
-            
+
             // Find the last space index within each chunk
             List<Integer> lastSpaceIndices = new ArrayList<>();
             int startIndex = 0;
@@ -191,14 +226,14 @@ public class DEPLOY {
 
             // Split the content into chunks and write them to separate files
             startIndex = 0;
-            for (int i = 1; i <= nbMachines; i++) {
-                int endIndex = (i < nbMachines) ? lastSpaceIndices.get(i - 1) : content.length();
+            for (int i = 0; i < nbMachines; i++) {
+                int endIndex = (i < nbMachines - 1) ? lastSpaceIndices.get(i) : content.length();
                 String chunk = content.substring(startIndex, endIndex);
 
                 // Write the chunk to a separate file
                 String chunkPath = String.format(DATA_DIR + "splits/S%d.txt", i);
 
-                // Write file with write string methode
+                // Write file with write string method
 
                 FileWriter fileWriter = new FileWriter(chunkPath);
                 try (BufferedWriter bufferedWriter = new BufferedWriter(fileWriter)) {
@@ -207,7 +242,7 @@ public class DEPLOY {
 
                 // Close
                 fileWriter.close();
-                
+
                 startIndex = endIndex + 1;
             }
 

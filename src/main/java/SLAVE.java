@@ -168,8 +168,13 @@ public class SLAVE {
                     String key = keyValue[0];
                     String value = keyValue[1];
                     int hash = key.hashCode();
-                    String hostname = machines.get(hash % machines.size());
-                    String outputFileName = hash + "-" + hostname + ".txt";
+
+                    int machineId = hash % machines.size();
+                    if (machineId < 0) {
+                        machineId += machines.size();
+                    }
+                    String hostname = machines.get(machineId);
+                    String outputFileName = hash + "_" + hostname + ".txt";
                     String outputFilePath = SHUFFLE_DIRECTORY + File.separator + outputFileName;
                     File outputFile = new File(outputFilePath);
                     BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
@@ -197,14 +202,19 @@ public class SLAVE {
 
             assert shuffleFiles != null;
             for (File shuffleFile : shuffleFiles) {
-                String hashString = shuffleFile.getName().split("-")[0];
+                String hashString = shuffleFile.getName().split("_")[0];
                 int hash = Integer.parseInt(hashString);
                 int machineNumber = hash % machines.size();
-                
-                if(!machines.get(machineNumber).equals(shuffleFile.getName().substring(hashString.length() + 1, shuffleFile.getName().indexOf(".txt")))) {
+                if (machineNumber < 0) {
+                    machineNumber += machines.size();
+                }
+
+                if (!machines.get(machineNumber).equals(shuffleFile.getName().substring(hashString.length() + 1,
+                        shuffleFile.getName().indexOf(".txt")))) {
                     System.err.println("Machine number: " + machineNumber);
                     System.err.println(machines.get(machineNumber));
-                    System.err.println(shuffleFile.getName().substring(hashString.length(), shuffleFile.getName().indexOf(".txt")));
+                    System.err.println(shuffleFile.getName().substring(hashString.length(),
+                            shuffleFile.getName().indexOf(".txt")));
                     throw new IllegalStateException("Wrong machine number");
                 }
 
@@ -231,9 +241,13 @@ public class SLAVE {
         try {
             String key = shuffleReceived.split(", ")[0];
             int hash = key.hashCode();
-            String hostname = machines.get(hash % machines.size());
+            int machineId = hash % machines.size();
+            if (machineId < 0) {
+                machineId += machines.size();
+            }
+            String hostname = machines.get(machineId);
 
-            String filename = hash + "-" + hostname + ".txt";
+            String filename = hash + "_" + hostname + ".txt";
             File shuffleReceivedFile = new File(SHUFFLE_RECEIVED_DIRECTORY + File.separator + filename);
             shuffleReceivedFile.createNewFile();
             BufferedWriter writer = new BufferedWriter(new FileWriter(shuffleReceivedFile, true));
