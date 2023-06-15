@@ -168,7 +168,6 @@ public class MASTER {
                         System.out.println("Message sent to machine " + machineToSend + ": " + messageToSend);
                     } else if (clientMessage.startsWith("Results: ")) {
                         String results = clientMessage.substring("Results: ".length());
-                        System.out.println("Results from machine " + machineId + ": " + ipAddress);
 
                         // Create the result directory if it doesn't exist
                         File resultDirectory = new File(RESULT_DIRECTORY);

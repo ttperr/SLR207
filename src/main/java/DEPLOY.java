@@ -22,7 +22,7 @@ public class DEPLOY {
     private static final String DATA_DIR = "data/";
     private static final String MACHINES_FILE = DATA_DIR + "machines.txt";
 
-    private static final String TEXT_FILE = "text/code.txt";
+    private static final String TEXT_FILE = "text/sante.txt";
 
     public static void main(String[] args) {
         new DEPLOY();

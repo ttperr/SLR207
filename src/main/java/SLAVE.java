@@ -66,8 +66,18 @@ public class SLAVE {
                 } else if (line.startsWith("launchShuffle")) {
                     String inputFile = line.split(" ")[1];
                     launchShuffle(inputFile);
-                    processShuffleOutput();
-                    sayDone();
+                    
+                    Thread shuffleThread = new Thread(() -> {
+                        processShuffleOutput();
+                        try {
+                            sayDone();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    });
+
+                    // Démarrer l'exécution du thread
+                    shuffleThread.start();
 
                 } else if (line.startsWith("ShuffleReceived: ")) {
                     String shuffleReceived = line.substring("ShuffleReceived: ".length());

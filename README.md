@@ -184,8 +184,8 @@ Finalement cela ne marche mais, du coup, j'ai trouvé un moyen et cela marche.
 
 Chaque machine est un serveur et le master est un client de tous les serveurs. Ainsi, le master peut envoyer des messages à tous les serveurs et les serveurs peuvent envoyer des messages au master. Il n'y a plus de mode et ainsi les requêtes sont envoyées dans le sens ou chaque SLAVE doit effectuer une fonction.
 
-Cependant, lors de la phase shuffle, les mots ""repassent"" par le master ce qui peut être un peu lourd en terme de nombre de messages.
+Cependant, lors de la phase shuffle, les mots ""repassent"" par le master ce qui peut être un peu lourd en terme de nombre de messages. Pour éviter tout blocage j'ai du créer un thread lors de la phase shuffle pour envoyer et recevoir les messages en même temps.
 
 ## Procédure de lancement
 
-Pour lancer le programme, il faut lancer le programme java ``CLEAN`. Puis le programme java ``DEPLOY`. Puis enfin le programme java ``MASTER`.
+Pour lancer le programme, il faut lancer le programme java ``CLEAN``. Puis le programme java ``DEPLOY``. Puis enfin le programme java ``MASTER``.
