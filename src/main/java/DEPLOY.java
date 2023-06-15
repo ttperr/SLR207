@@ -1,7 +1,10 @@
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 public class DEPLOY {
@@ -18,6 +21,8 @@ public class DEPLOY {
 
     private static final String DATA_DIR = "data/";
     private static final String MACHINES_FILE = DATA_DIR + "machines.txt";
+
+    private static final String TEXT_FILE = "text/test.txt";
 
     public static void main(String[] args) {
         new DEPLOY();
@@ -102,6 +107,8 @@ public class DEPLOY {
                 showErrorMessage("Erreur lors du déplacement du fichier SLAVE.jar", moveJarToDirProcess);
             }
 
+            preProcessFile(TEXT_FILE, machines);
+
             ProcessBuilder moveMachinesFileToDir = new ProcessBuilder("cp", "-r", DATA_DIR + ".", "." + REMOTE_DIR);
             Process moveMachinesFileToDirProcess = moveMachinesFileToDir.start();
             int moveMachinesFileToDirExitCode = moveMachinesFileToDirProcess.waitFor();
@@ -160,5 +167,52 @@ public class DEPLOY {
 
         System.err.println("-".repeat(80));
         System.exit(1);
+    }
+
+    private void preProcessFile(String path, List<String> machines) {
+        File file = new File(path);
+        int nbMachines = machines.size();
+        try {
+            String content = Files.readString(file.toPath());
+            content = content.replaceAll("\n ", " ");
+            content = content.replaceAll("\n", " ");
+            
+            // Split in nbMachines files but cut only at spaces
+            int chunkSize = content.length() / nbMachines;
+            
+            // Find the last space index within each chunk
+            List<Integer> lastSpaceIndices = new ArrayList<>();
+            int startIndex = 0;
+            for (int i = 0; i < nbMachines - 1; i++) {
+                int lastSpaceIndex = content.lastIndexOf(" ", startIndex + chunkSize);
+                lastSpaceIndices.add(lastSpaceIndex);
+                startIndex = lastSpaceIndex + 1;
+            }
+
+            // Split the content into chunks and write them to separate files
+            startIndex = 0;
+            for (int i = 1; i <= nbMachines; i++) {
+                int endIndex = (i < nbMachines) ? lastSpaceIndices.get(i - 1) : content.length();
+                String chunk = content.substring(startIndex, endIndex);
+
+                // Write the chunk to a separate file
+                String chunkPath = String.format(DATA_DIR + "splits/S%d.txt", i);
+
+                // Write file with write string methode
+
+                FileWriter fileWriter = new FileWriter(chunkPath);
+                try (BufferedWriter bufferedWriter = new BufferedWriter(fileWriter)) {
+                    bufferedWriter.write(chunk);
+                }
+
+                // Close
+                fileWriter.close();
+                
+                startIndex = endIndex + 1;
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
