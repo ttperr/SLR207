@@ -58,39 +58,27 @@ public class SLAVE {
 
                 } else if (line.equals("connectEachOther")) {
                     connectEachOther();
-                    sayDone();
+                    sayDoneToMaster();
                 } else if (line.startsWith("launchMap")) {
                     String inputFile = line.split(" ")[1];
                     launchMap(inputFile);
-                    sayDone();
+                    sayDoneToMaster();
 
                 } else if (line.startsWith("launchShuffle")) {
                     String inputFile = line.split(" ")[1];
                     launchShuffle(inputFile);
 
-                    Thread shuffleThread = new Thread(() -> {
-                        processShuffleOutput();
-                        try {
-                            sayDone();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    });
+                    endOfShuffle();
 
-                    // Démarrer l'exécution du thread
-                    shuffleThread.start();
-
-                } else if (line.startsWith("ShuffleReceived: ")) {
-                    String shuffleReceived = line.substring("ShuffleReceived: ".length());
-                    processShuffleReceived(shuffleReceived);
+                    sayDoneToMaster();
 
                 } else if (line.equals("launchReduce")) {
                     launchReduce();
-                    sayDone();
+                    sayDoneToMaster();
 
                 } else if (line.startsWith("launchResult")) {
                     launchResult();
-                    sayDone();
+                    sayDoneToMaster();
 
                 } else if (line.startsWith("runCommand")) {
                     String command = line.substring("runCommand ".length());
@@ -101,10 +89,10 @@ public class SLAVE {
                     System.out.println("Code: " + code);
 
                     // Send back done.
-                    sayDone();
+                    sayDoneToMaster();
 
                 } else {
-                    System.err.println("Invalid command.");
+                    throw new IllegalStateException("Unexpected message: " + line);
                 }
             }
             System.out.println("Closing connection...");
@@ -112,12 +100,51 @@ public class SLAVE {
             writerMaster.close();
             masterSocket.close();
             serverSocket.close();
+            for (Socket socket : sockets) {
+                if (socket != null) {
+                    socket.close();
+                }
+            }
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    private void sayDone() throws IOException {
+    private void endOfShuffle() {
+        Thread shuffleThread = new Thread(this::processShuffleOutput);
+        ArrayList<Thread> shuffleReceiveThreads = new ArrayList<>();
+
+        for(int i = 0; i < sockets.length; i++) {
+            Socket socket = sockets[i];
+            if (socket != null && i != machineId) {
+                int finalI = i;
+                Thread shuffleReceiveThread = new Thread(() -> {
+                    try {
+                        listenShuffleMessages(finalI);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
+                shuffleReceiveThreads.add(shuffleReceiveThread);
+                shuffleReceiveThread.start();
+            }
+        }
+
+        // Démarrer l'exécution du thread
+        shuffleThread.start();
+
+        // Attendre la fin du thread
+        try {
+            shuffleThread.join();
+            for (Thread shuffleReceiveThread : shuffleReceiveThreads) {
+                shuffleReceiveThread.join();
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void sayDoneToMaster() throws IOException {
         writerMaster.println("DONE.");
     }
 
@@ -285,8 +312,31 @@ public class SLAVE {
                     System.out.println("Message sent to machine " + machineNumber + ": " + line);
                 }
             }
+            for (Socket socket : sockets) {
+                PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
+                writer.println("DONE.");
+                writer.close();
+            }
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void listenShuffleMessages(int machineNumber) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(sockets[machineNumber].getInputStream()));
+        String line;
+        while (true) {
+            if ((line = reader.readLine()) != null) {
+                System.out.println("Message received from machine " + machineNumber + ": " + line);
+
+                if (line.startsWith("ShuffleReceived: ")) {
+                    processShuffleReceived(line.substring("ShuffleReceived: ".length()));
+                } else if (line.equals("DONE.")) {
+                    break;
+                } else {
+                    throw new IllegalStateException("Unknown message: " + line);
+                }
+            }
         }
     }
 
