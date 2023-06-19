@@ -51,7 +51,7 @@ public class MASTER {
 
         System.out.println("Master connected. Starting map phase...");
 
-        /**
+        /* Création de répertoire machine
         // Créer les répertoires sur les machines
         createSplitDirectoryOnMachines();
         waitForCommand();

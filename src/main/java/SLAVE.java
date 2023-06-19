@@ -396,12 +396,4 @@ public class SLAVE {
         }
     }
 
-    private boolean isDuplicateConnection(Socket socket) {
-        for (int i = 0; i < machines.size(); i++) {
-            if (sockets[i] != null && sockets[i].equals(socket)) {
-                return true;
-            }
-        }
-        return false;
-    }
 }

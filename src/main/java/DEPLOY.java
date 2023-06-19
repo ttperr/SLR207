@@ -111,7 +111,7 @@ public class DEPLOY {
 
             // Pré process du fichier txt
             if (isTest) {
-                preProcessFile(TEXT_FILE, machines);
+                preProcessFile(machines);
             }
 
             ProcessBuilder moveMachinesFileToDir = new ProcessBuilder("cp", MACHINES_FILE, "." + REMOTE_DIR);
@@ -145,7 +145,7 @@ public class DEPLOY {
                 try {
 
                     if (isTest) {
-                        // Copie du split dans le dossier .REMOTE_DIR
+                        // Copie du split dans le dossier ".REMOTE_DIR"
                         ProcessBuilder moveSplitToDir = new ProcessBuilder("cp",
                                 DATA_DIR + "splits" + File.separator + "S" + machineNumber + ".txt", "." + SPLIT_DIR + File.separator);
                         Process moveSplitToDirProcess = moveSplitToDir.start();
@@ -172,8 +172,7 @@ public class DEPLOY {
 
                     if (isTest) {
                         // Suppression du split du dossier splits
-                        ProcessBuilder rmSplit = new ProcessBuilder("rm",
-                                "." + SPLIT_DIR + File.separator + "S" + machineNumber + ".txt");
+                        ProcessBuilder rmSplit = new ProcessBuilder("rm", "." + SPLIT_DIR + File.separator + "S" + machineNumber + ".txt");
                         Process rmSplitProcess = rmSplit.start();
                         int rmSplitExitCode = rmSplitProcess.waitFor();
 
@@ -184,13 +183,14 @@ public class DEPLOY {
                         System.out.println("Fichier split S" + machineNumber + " supprimé avec succès");
                     }
 
+                    /* Lancement du programme sur la machine distante
                     // Lancer le programme sur la machine distante
-                    // ProcessBuilder sshPb = new ProcessBuilder("ssh", machine, "java", "-jar",
-                    // REMOTE_DIR + File.separator + SLAVE_JAR);
-                    // sshPb.start();
-                    // System.out.println(
-                    // "Programme lancé sur la machine " + machineNumber + ": " + ipAddress + "\n");
-
+                    ProcessBuilder sshPb = new ProcessBuilder("ssh", machine, "java", "-jar",
+                    REMOTE_DIR + File.separator + SLAVE_JAR);
+                    sshPb.start();
+                    System.out.println(
+                    "Programme lancé sur la machine " + machineNumber + ": " + ipAddress + "\n");
+                    */
 
                     if (machineNumber != 0 && machineNumber % 5 == 0) {
                         Thread.sleep(60000);
@@ -216,8 +216,8 @@ public class DEPLOY {
         System.exit(1);
     }
 
-    private void preProcessFile(String path, List<String> machines) {
-        File file = new File(path);
+    private void preProcessFile(List<String> machines) {
+        File file = new File(TEXT_FILE);
         int nbMachines = machines.size();
         try {
             String content = Files.readString(file.toPath());
