@@ -20,12 +20,12 @@ public class DEPLOY {
     private static final String SLAVE = "SLAVE";
     private static final String SLAVE_JAR = "SLAVE.jar";
 
-    private static final String DATA_DIR = "data/";
-    private static final String MACHINES_FILE = DATA_DIR + "machines.txt";
-
-    private static final boolean isTest = true;
+    private static final String DATA_DIR = "data";
+    private static final String MACHINES_FILE = DATA_DIR + "/machines.txt";
 
     private static final String TEXT_FILE = "text/test.txt";
+
+    private static final boolean isTest = true;
 
     public static void main(String[] args) {
         new DEPLOY();
@@ -147,7 +147,7 @@ public class DEPLOY {
                     if (isTest) {
                         // Copie du split dans le dossier ".REMOTE_DIR"
                         ProcessBuilder moveSplitToDir = new ProcessBuilder("cp",
-                                DATA_DIR + "splits" + File.separator + "S" + machineNumber + ".txt", "." + SPLIT_DIR + File.separator);
+                                DATA_DIR + File.separator + "splits" + File.separator + "S" + machineNumber + ".txt", "." + SPLIT_DIR + File.separator);
                         Process moveSplitToDirProcess = moveSplitToDir.start();
                         int moveSplitToDirExitCode = moveSplitToDirProcess.waitFor();
 
@@ -245,7 +245,7 @@ public class DEPLOY {
                 String chunk = content.substring(startIndex, endIndex);
 
                 // Write the chunk to a separate file
-                String chunkPath = String.format(DATA_DIR + "splits/S%d.txt", i);
+                String chunkPath = String.format(DATA_DIR + File.separator + "splits/S%d.txt", i);
 
                 // Write file with write string method
 
