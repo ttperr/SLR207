@@ -109,7 +109,9 @@ public class DEPLOY {
             System.out.println("Fichier " + SLAVE_JAR + " déplacé avec succès");
 
             // Pré process du fichier txt
-            // preProcessFile(TEXT_FILE, machines);
+            if (isTest) {
+                preProcessFile(TEXT_FILE, machines);
+            }
 
             ProcessBuilder moveMachinesFileToDir = new ProcessBuilder("cp", MACHINES_FILE, "." + REMOTE_DIR);
             Process moveMachinesFileToDirProcess = moveMachinesFileToDir.start();
