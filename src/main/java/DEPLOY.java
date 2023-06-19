@@ -22,6 +22,8 @@ public class DEPLOY {
     private static final String DATA_DIR = "data/";
     private static final String MACHINES_FILE = DATA_DIR + "machines.txt";
 
+    private static final boolean isTest = true;
+
     private static final String TEXT_FILE = "text/sante.txt";
 
     public static void main(String[] args) {
@@ -42,51 +44,46 @@ public class DEPLOY {
             Process javacProcess = javacPb.start();
             int javacExitCode = javacProcess.waitFor();
 
-            if (javacExitCode == 0) {
-                // La compilation s'est terminée avec succès
-                System.out.println("Compilation terminée avec succès");
-
-                // Créer le fichier JAR
-                ProcessBuilder jarPb = new ProcessBuilder("jar", "cvfe", ".." + File.separator + SLAVE_JAR, SLAVE,
-                        SLAVE + ".class");
-                jarPb.directory(srcDirPath.toFile());
-                Process jarProcess = jarPb.start();
-                int jarExitCode = jarProcess.waitFor();
-
-                if (jarExitCode == 0) {
-                    // Le fichier JAR a été créé avec succès
-                    System.out.println("Fichier JAR créé avec succès");
-
-                    // Supprimer le fichier SLAVE.class
-                    ProcessBuilder rmPb = new ProcessBuilder("rm", SLAVE + ".class");
-                    rmPb.directory(srcDirPath.toFile());
-                    Process rmProcess = rmPb.start();
-                    int rmExitCode = rmProcess.waitFor();
-
-                    if (rmExitCode == 0) {
-                        // Le fichier SLAVE.class a été supprimé avec succès
-                        System.out.println("Fichier SLAVE.class supprimé avec succès");
-
-                        System.out.println("\nDéploiement sur les machines...\n");
-                    } else {
-                        showErrorMessage("Erreur lors de la suppression du fichier SLAVE.class", rmProcess);
-                    }
-                } else {
-                    showErrorMessage("Erreur lors de la création du fichier JAR", jarProcess);
-                }
-            } else {
+            if (javacExitCode != 0) {
                 showErrorMessage("Erreur lors de la compilation", javacProcess);
             }
+            // La compilation s'est terminée avec succès
+            System.out.println("Compilation terminée avec succès");
 
-            // Création du répertoire à envoyer
+            // Créer le fichier JAR
+            ProcessBuilder jarPb = new ProcessBuilder("jar", "cvfe", ".." + File.separator + SLAVE_JAR, SLAVE,
+                    SLAVE + ".class");
+            jarPb.directory(srcDirPath.toFile());
+            Process jarProcess = jarPb.start();
+            int jarExitCode = jarProcess.waitFor();
+
+            if (jarExitCode != 0) {
+                showErrorMessage("Erreur lors de la création du fichier JAR", jarProcess);
+            }
+            // Le fichier JAR a été créé avec succès
+            System.out.println("Fichier JAR créé avec succès");
+
+            // Supprimer le fichier SLAVE.class
+            ProcessBuilder rmPb = new ProcessBuilder("rm", SLAVE + ".class");
+            rmPb.directory(srcDirPath.toFile());
+            Process rmProcess = rmPb.start();
+            int rmExitCode = rmProcess.waitFor();
+
+            if (rmExitCode != 0) {
+                showErrorMessage("Erreur lors de la suppression du fichier SLAVE.class", rmProcess);
+            }
+            // Le fichier SLAVE.class a été supprimé avec succès
+            System.out.println("Fichier SLAVE.class supprimé avec succès");
+
+            System.out.println("\nDéploiement sur les machines...\n");
+
+
+            // Création du répertoire à envoyer sur la machine principale
             ProcessBuilder mkdirPb = new ProcessBuilder("mkdir", "-p", "." + REMOTE_DIR);
             Process mkdirProcess = mkdirPb.start();
             int mkdirExitCode = mkdirProcess.waitFor();
 
-            if (mkdirExitCode == 0) {
-                // Le répertoire a été créé avec succès
-                System.out.println("Répertoire créé avec succès\n");
-            } else {
+            if (mkdirExitCode != 0) {
                 System.err.println("-".repeat(80));
 
                 // Une erreur s'est produite lors de la création du répertoire
@@ -96,31 +93,34 @@ public class DEPLOY {
                 System.err.println("-".repeat(80));
                 System.exit(1);
             }
+            // Le répertoire a été créé avec succès
+            System.out.println("Répertoire créé avec succès\n");
+
 
             ProcessBuilder moveJarToDir = new ProcessBuilder("mv", PROJECT_DIR + File.separator + SLAVE_JAR,
                     "." + REMOTE_DIR);
             Process moveJarToDirProcess = moveJarToDir.start();
             int moveToDirExitCode = moveJarToDirProcess.waitFor();
 
-            if (moveToDirExitCode == 0) {
-                // Le fichier a été déplacé avec succès
-                System.out.println("Fichier déplacé avec succès");
-            } else {
+            if (moveToDirExitCode != 0) {
                 showErrorMessage("Erreur lors du déplacement du fichier SLAVE.jar", moveJarToDirProcess);
             }
+            // Le fichier a été déplacé avec succès
+            System.out.println("Fichier " + SLAVE_JAR + " déplacé avec succès");
 
-            preProcessFile(TEXT_FILE, machines);
+            // Pré process du fichier txt
+            // preProcessFile(TEXT_FILE, machines);
 
             ProcessBuilder moveMachinesFileToDir = new ProcessBuilder("cp", MACHINES_FILE, "." + REMOTE_DIR);
             Process moveMachinesFileToDirProcess = moveMachinesFileToDir.start();
             int moveMachinesFileToDirExitCode = moveMachinesFileToDirProcess.waitFor();
 
-            if (moveMachinesFileToDirExitCode == 0) {
-                // Le fichier a été déplacé avec succès
-                System.out.println("Fichier machines déplacé avec succès");
-            } else {
+            if (moveMachinesFileToDirExitCode != 0) {
                 showErrorMessage("Erreur lors du déplacement du fichier machines.txt", moveMachinesFileToDirProcess);
             }
+            // Le fichier a été déplacé avec succès
+            System.out.println("Fichier machines.txt déplacé avec succès");
+
 
             // Tester la connexion SSH sur chaque machine et copier le fichier "slave.jar"
             // si la connexion réussit
@@ -130,53 +130,53 @@ public class DEPLOY {
 
                 try {
 
-                    // Copie du split dans le dossier .REMOTE_DIR
-                    ProcessBuilder moveSplitToDir = new ProcessBuilder("cp",
-                            DATA_DIR + "splits/S" + machineNumber + ".txt", "." + REMOTE_DIR);
-                    Process moveSplitToDirProcess = moveSplitToDir.start();
-                    int moveSplitToDirExitCode = moveSplitToDirProcess.waitFor();
+                    if (isTest) {
+                        // Copie du split dans le dossier .REMOTE_DIR
+                        ProcessBuilder moveSplitToDir = new ProcessBuilder("cp",
+                                DATA_DIR + "splits/S" + machineNumber + ".txt", "." + REMOTE_DIR);
+                        Process moveSplitToDirProcess = moveSplitToDir.start();
+                        int moveSplitToDirExitCode = moveSplitToDirProcess.waitFor();
 
-                    if (moveSplitToDirExitCode == 0) {
+                        if (moveSplitToDirExitCode != 0) {
+                            showErrorMessage("Erreur lors du déplacement du fichier split", moveSplitToDirProcess);
+                        }
                         // Le fichier a été déplacé avec succès
                         System.out.println("\nFichier split S" + machineNumber + " déplacé avec succès");
-                    } else {
-                        showErrorMessage("Erreur lors du déplacement du fichier split", moveSplitToDirProcess);
                     }
 
-                    // Copier le fichier "SLAVE.jar" dans le répertoire distant
+                    // Copier du dossier tmp dans le répertoire distant
                     ProcessBuilder scpPb = new ProcessBuilder("scp", "-r", "." + REMOTE_DIR, machine + ":" + TEMP_DIR);
                     Process scpProcess = scpPb.start();
                     int scpExitCode = scpProcess.waitFor();
 
-                    if (scpExitCode == 0) {
-                        // La copie du fichier s'est terminée avec succès
-                        System.out.println("Fichiers copiés sur la machine " + machineNumber + ": " + ipAddress);
+                    if (scpExitCode != 0) {
+                        showErrorMessage("Erreur lors de la copie des fichiers sur la machine " + machineNumber + ": "
+                                + ipAddress, scpProcess);
+                    }
+                    // La copie du fichier s'est terminée avec succès
+                    System.out.println("Fichiers copiés sur la machine " + machineNumber + ": " + ipAddress);
 
+                    if (isTest) {
                         // Suppression du split du fichier .REMOTE_DIR
                         ProcessBuilder rmSplit = new ProcessBuilder("rm",
                                 "." + REMOTE_DIR + File.separator + "S" + machineNumber + ".txt");
                         Process rmSplitProcess = rmSplit.start();
                         int rmSplitExitCode = rmSplitProcess.waitFor();
 
-                        if (rmSplitExitCode == 0) {
-                            // Le fichier a été supprimé avec succès
-                            System.out.println("Fichier split S" + machineNumber + " supprimé avec succès");
-
-                            // Lancer le programme sur la machine distante
-                            // ProcessBuilder sshPb = new ProcessBuilder("ssh", machine, "java", "-jar",
-                            // REMOTE_DIR + File.separator + SLAVE_JAR);
-                            // sshPb.start();
-                            // System.out.println(
-                            // "Programme lancé sur la machine " + machineNumber + ": " + ipAddress + "\n");
-
-                        } else {
+                        if (rmSplitExitCode != 0) {
                             showErrorMessage("Erreur lors de la suppression du fichier split", rmSplitProcess);
                         }
-
-                    } else {
-                        showErrorMessage("Erreur lors de la copie des fichiers sur la machine " + machineNumber + ": "
-                                + ipAddress, scpProcess);
+                        // Le fichier a été supprimé avec succès
+                        System.out.println("Fichier split S" + machineNumber + " supprimé avec succès");
                     }
+
+                    // Lancer le programme sur la machine distante
+                    // ProcessBuilder sshPb = new ProcessBuilder("ssh", machine, "java", "-jar",
+                    // REMOTE_DIR + File.separator + SLAVE_JAR);
+                    // sshPb.start();
+                    // System.out.println(
+                    // "Programme lancé sur la machine " + machineNumber + ": " + ipAddress + "\n");
+
 
                     if (machineNumber != 0 && machineNumber % 5 == 0) {
                         Thread.sleep(60000);
