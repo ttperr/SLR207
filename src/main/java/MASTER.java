@@ -14,7 +14,7 @@ public class MASTER {
     private static final String USERNAME = "tperrot-21";
 
     private static final String HOME_DIRECTORY = "/tmp/" + USERNAME;
-    private static final String SPLIT_DIRECTORY_REMOTE = HOME_DIRECTORY + "/.";
+    private static final String SPLIT_DIRECTORY_REMOTE = HOME_DIRECTORY + "/splits";
     private static final String MAP_DIRECTORY_REMOTE = HOME_DIRECTORY + "/maps";
 
     private static final String RESULT_DIRECTORY = "results";
@@ -51,11 +51,16 @@ public class MASTER {
 
         System.out.println("Master connected. Starting map phase...");
 
+        /**
         // Créer les répertoires sur les machines
         createSplitDirectoryOnMachines();
         waitForCommand();
 
         System.out.println("Répertoires créés sur les machines.");
+        */
+
+        runConnectEachOther();
+        waitForCommand();
 
         // Lancer la phase de map sur les machines
         runMapPhase();
@@ -105,7 +110,10 @@ public class MASTER {
 
     private void createSplitDirectoryOnMachines() {
         servers.forEach(client -> client.sendCommand("runCommand mkdir -p " + SPLIT_DIRECTORY_REMOTE));
+    }
 
+    private void runConnectEachOther() {
+        servers.forEach(client -> client.sendCommand("connectEachOther"));
     }
 
     private void runMapPhase() {

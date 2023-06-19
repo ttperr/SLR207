@@ -12,6 +12,7 @@ public class DEPLOY {
 
     private static final String TEMP_DIR = "/tmp";
     private static final String REMOTE_DIR = TEMP_DIR + "/" + USERNAME;
+    private static final String SPLIT_DIR = REMOTE_DIR + "/splits";
 
     private static final String PROJECT_DIR = "src/main";
     private static final String SRC_DIR = PROJECT_DIR + "/java";
@@ -24,7 +25,7 @@ public class DEPLOY {
 
     private static final boolean isTest = true;
 
-    private static final String TEXT_FILE = "text/sante.txt";
+    private static final String TEXT_FILE = "text/test.txt";
 
     public static void main(String[] args) {
         new DEPLOY();
@@ -123,6 +124,17 @@ public class DEPLOY {
             // Le fichier a été déplacé avec succès
             System.out.println("Fichier machines.txt déplacé avec succès");
 
+            // Création du dossier SPLIT_DIR
+            ProcessBuilder mkdirSplitDir = new ProcessBuilder("mkdir", "-p", "." + SPLIT_DIR);
+            Process mkdirSplitDirProcess = mkdirSplitDir.start();
+            int mkdirSplitDirExitCode = mkdirSplitDirProcess.waitFor();
+
+            if (mkdirSplitDirExitCode != 0) {
+                showErrorMessage("Erreur lors de la création du répertoire " + SPLIT_DIR, mkdirSplitDirProcess);
+            }
+            // Le répertoire a été créé avec succès
+            System.out.println("Répertoire " + SPLIT_DIR + " créé avec succès\n");
+
 
             // Tester la connexion SSH sur chaque machine et copier le fichier "slave.jar"
             // si la connexion réussit
@@ -135,7 +147,7 @@ public class DEPLOY {
                     if (isTest) {
                         // Copie du split dans le dossier .REMOTE_DIR
                         ProcessBuilder moveSplitToDir = new ProcessBuilder("cp",
-                                DATA_DIR + "splits/S" + machineNumber + ".txt", "." + REMOTE_DIR);
+                                DATA_DIR + "splits" + File.separator + "S" + machineNumber + ".txt", "." + SPLIT_DIR + File.separator);
                         Process moveSplitToDirProcess = moveSplitToDir.start();
                         int moveSplitToDirExitCode = moveSplitToDirProcess.waitFor();
 
@@ -159,9 +171,9 @@ public class DEPLOY {
                     System.out.println("Fichiers copiés sur la machine " + machineNumber + ": " + ipAddress);
 
                     if (isTest) {
-                        // Suppression du split du fichier .REMOTE_DIR
+                        // Suppression du split du dossier splits
                         ProcessBuilder rmSplit = new ProcessBuilder("rm",
-                                "." + REMOTE_DIR + File.separator + "S" + machineNumber + ".txt");
+                                "." + SPLIT_DIR + File.separator + "S" + machineNumber + ".txt");
                         Process rmSplitProcess = rmSplit.start();
                         int rmSplitExitCode = rmSplitProcess.waitFor();
 

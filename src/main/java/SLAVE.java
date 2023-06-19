@@ -1,14 +1,8 @@
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -24,7 +18,9 @@ public class SLAVE {
     private static final String MACHINES_FILE = HOME_DIRECTORY + "/machines.txt";
 
     private static final int PORT = 8888;
-    private final HashMap<Integer, String> machines = new HashMap<>();
+    private final ArrayList<String> machines = new ArrayList<>();
+    private final Socket[] sockets;
+    private ServerSocket serverSocket;
     private int machineId;
 
     private BufferedReader readerMaster;
@@ -38,9 +34,10 @@ public class SLAVE {
 
         File machinesFile = new File(MACHINES_FILE);
         getMachines(machinesFile);
+        sockets = new Socket[machines.size()];
 
         try {
-            ServerSocket serverSocket = new ServerSocket(PORT);
+            serverSocket = new ServerSocket(PORT);
             System.out.println("Waiting for master...");
             Socket masterSocket = serverSocket.accept();
 
@@ -50,6 +47,7 @@ public class SLAVE {
             System.out.println(
                     "Connected to : " + masterSocket.getInetAddress().getCanonicalHostName() + " on port " + PORT);
 
+
             String line;
             while (true) {
                 line = readerMaster.readLine();
@@ -58,6 +56,9 @@ public class SLAVE {
                 if (line.equals("QUIT")) {
                     break;
 
+                } else if (line.equals("connectEachOther")) {
+                    connectEachOther();
+                    sayDone();
                 } else if (line.startsWith("launchMap")) {
                     String inputFile = line.split(" ")[1];
                     launchMap(inputFile);
@@ -66,7 +67,7 @@ public class SLAVE {
                 } else if (line.startsWith("launchShuffle")) {
                     String inputFile = line.split(" ")[1];
                     launchShuffle(inputFile);
-                    
+
                     Thread shuffleThread = new Thread(() -> {
                         processShuffleOutput();
                         try {
@@ -119,6 +120,51 @@ public class SLAVE {
     private void sayDone() throws IOException {
         writerMaster.println("DONE.");
     }
+
+    private void connectEachOther() throws IOException {
+        Thread connectThread = new Thread(() -> {
+            try {
+                for (int machineId = 0; machineId < machines.size(); machineId++) {
+                    // Lock sockets
+                    synchronized (sockets) {
+                        if (machineId != this.machineId && sockets[machineId] == null) {
+                            sockets[machineId] = new Socket(machines.get(machineId), PORT);
+                            System.out.println("Connected to " + machines.get(machineId));
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
+        Thread acceptThread = new Thread(() -> {
+            try {
+                for (int machineId = 0; machineId < machines.size(); machineId++) {
+                    // Lock sockets
+                    synchronized (sockets) {
+                        if (machineId != this.machineId && sockets[machineId] == null) {
+                            sockets[machineId] = serverSocket.accept();
+                            System.out.println("Connected to " + machines.get(machineId));
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
+        connectThread.start();
+        acceptThread.start();
+
+        try {
+            connectThread.join();
+            acceptThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     private void launchMap(String inputFile) {
         try {
@@ -333,11 +379,12 @@ public class SLAVE {
 
     private void getMachines(File machinesFile) {
         try {
+
             BufferedReader reader = new BufferedReader(new FileReader(machinesFile));
             String line;
             int machineNumber = 0;
             while ((line = reader.readLine()) != null) {
-                machines.put(machineNumber, line);
+                machines.add(line);
                 if (line.equals(InetAddress.getLocalHost().getCanonicalHostName()))
                     machineId = machineNumber;
                 machineNumber++;
@@ -347,5 +394,14 @@ public class SLAVE {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private boolean isDuplicateConnection(Socket socket) {
+        for (int i = 0; i < machines.size(); i++) {
+            if (sockets[i] != null && sockets[i].equals(socket)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
