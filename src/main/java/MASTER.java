@@ -49,7 +49,7 @@ public class MASTER {
 
     public void start() {
 
-        System.out.println("Master connected. Starting map phase...");
+        System.out.println("Master connected.");
 
         /* Création de répertoire machine
         // Créer les répertoires sur les machines
@@ -61,6 +61,8 @@ public class MASTER {
 
         runConnectEachOther();
         waitForCommand();
+
+        System.out.println("FULL DISTRIBUTED SERVER CREATED");
 
         // Lancer la phase de map sur les machines
         runMapPhase();

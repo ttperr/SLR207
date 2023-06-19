@@ -223,14 +223,7 @@ public class SLAVE {
                 if (keyValue.length == 2) {
                     String key = keyValue[0];
                     String value = keyValue[1];
-                    int hash = key.hashCode();
-
-                    int machineId = hash % machines.size();
-                    if (machineId < 0) {
-                        machineId += machines.size();
-                    }
-                    String hostname = machines.get(machineId);
-                    String outputFileName = hash + "_" + hostname + ".txt";
+                    String outputFileName = getShuffleFilename(key);
                     String outputFilePath = SHUFFLE_DIRECTORY + File.separator + outputFileName;
                     File outputFile = new File(outputFilePath);
                     BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
@@ -282,8 +275,12 @@ public class SLAVE {
                     String line = reader.readLine();
                     reader.close();
 
-                    writerMaster.println("Send: " + machineNumber);
-                    writerMaster.println(line);
+                    //writerMaster.println("Send: " + machineNumber);
+                    //writerMaster.println(line);
+
+                    PrintWriter writer = new PrintWriter(sockets[machineNumber].getOutputStream(), true);
+                    writer.println("ShuffleReceived: " + line);
+                    writer.close();
 
                     System.out.println("Message sent to machine " + machineNumber + ": " + line);
                 }
@@ -296,14 +293,7 @@ public class SLAVE {
     private void processShuffleReceived(String shuffleReceived) {
         try {
             String key = shuffleReceived.split(", ")[0];
-            int hash = key.hashCode();
-            int machineId = hash % machines.size();
-            if (machineId < 0) {
-                machineId += machines.size();
-            }
-            String hostname = machines.get(machineId);
-
-            String filename = hash + "_" + hostname + ".txt";
+            String filename = getShuffleFilename(key);
             File shuffleReceivedFile = new File(SHUFFLE_RECEIVED_DIRECTORY + File.separator + filename);
             shuffleReceivedFile.createNewFile();
             BufferedWriter writer = new BufferedWriter(new FileWriter(shuffleReceivedFile, true));
@@ -313,6 +303,17 @@ public class SLAVE {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private String getShuffleFilename(String key) {
+        int hash = key.hashCode();
+        int machineId = hash % machines.size();
+        if (machineId < 0) {
+            machineId += machines.size();
+        }
+        String hostname = machines.get(machineId);
+
+        return hash + "_" + hostname + ".txt";
     }
 
     private void launchReduce() {
