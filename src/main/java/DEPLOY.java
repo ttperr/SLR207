@@ -8,22 +8,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DEPLOY {
-    private static final String USERNAME = "tperrot-21";
+    public static final String USERNAME = "tperrot-21";
 
-    private static final String TEMP_DIR = "/tmp";
-    private static final String REMOTE_DIR = TEMP_DIR + "/" + USERNAME;
-    private static final String SPLIT_DIR = REMOTE_DIR + "/splits";
+    public static final String TEMP_DIR = "/tmp";
+    public static final String REMOTE_DIR = TEMP_DIR + "/" + USERNAME;
+    public static final String SPLIT_DIR = REMOTE_DIR + "/splits";
 
-    private static final String PROJECT_DIR = "src/main";
-    private static final String SRC_DIR = PROJECT_DIR + "/java";
+    public static final String PROJECT_DIR = "src/main";
+    public static final String SRC_DIR = PROJECT_DIR + "/java";
 
-    private static final String SLAVE = "SLAVE";
-    private static final String SLAVE_JAR = "SLAVE.jar";
+    public static final String SLAVE = "SLAVE";
+    public static final String SLAVE_JAR = "SLAVE.jar";
 
-    private static final String DATA_DIR = "data";
-    private static final String MACHINES_FILE = DATA_DIR + "/machines.txt";
+    public static final String DATA_DIR = "data";
+    public static final String MACHINES_FILE = MASTER.MACHINES_FILE;
 
-    private static final String TEXT_FILE = "text/test.txt";
+    public static final String TEXT_DIR = "text";
+    public static final String TEXT_FILE = TEXT_DIR + File.separator + MASTER.TEXT_NAME;
 
     private static final boolean isTest = true;
 

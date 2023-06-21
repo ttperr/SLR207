@@ -1,9 +1,4 @@
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,15 +6,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MASTER {
-    private static final String USERNAME = "tperrot-21";
+    public static final String USERNAME = "tperrot-21";
 
-    private static final String HOME_DIRECTORY = "/tmp/" + USERNAME;
-    private static final String SPLIT_DIRECTORY_REMOTE = HOME_DIRECTORY + "/splits";
-    private static final String MAP_DIRECTORY_REMOTE = HOME_DIRECTORY + "/maps";
+    public static final String HOME_DIRECTORY = "/tmp/" + USERNAME;
+    public static final String SPLIT_DIRECTORY_REMOTE = HOME_DIRECTORY + "/splits";
+    public static final String MAP_DIRECTORY_REMOTE = HOME_DIRECTORY + "/maps";
 
-    private static final String RESULT_DIRECTORY = "results";
+    public static final String TEXT_NAME = "code.txt";
 
-    private static final String MACHINES_FILE = "data/machines.txt";
+    public static final String RESULT_DIRECTORY = "results";
+    public static final String RESULT_FILE = RESULT_DIRECTORY + File.separator + TEXT_NAME;
+
+    public static final String MACHINES_FILE = "data/machines.txt";
+
 
     private final List<ServerHandler> servers = new ArrayList<>(); // Liste des clients connectés
     private List<String> machines = new ArrayList<>();
@@ -92,7 +91,7 @@ public class MASTER {
         // Attendre que tous les SLAVES se terminent
         waitForCommand();
 
-        System.out.println("Résultats fusionnés et présents dans results/result.txt");
+        System.out.println("Résultats fusionnés et présents dans results/" + TEXT_NAME);
 
         // Ferme tous les clients
         servers.forEach(ServerHandler::close);
@@ -166,7 +165,9 @@ public class MASTER {
                 while ((clientMessage = in.readLine()) != null) {
                     if (clientMessage.equals("DONE.")) {
                         break;
-                    } else if (clientMessage.startsWith("Send: ")) {
+                    }
+                    /*
+                    else if (clientMessage.startsWith("Send: ")) {
                         System.out.println("Message from machine " + machineId + ": " + ipAddress);
                         String machineNumber = clientMessage.split(" ")[1];
                         String messageToSend = in.readLine();
@@ -176,7 +177,9 @@ public class MASTER {
                         servers.get(machineToSend).sendCommand("ShuffleReceived: " + messageToSend);
 
                         System.out.println("Message sent to machine " + machineToSend + ": " + messageToSend);
-                    } else if (clientMessage.startsWith("Results: ")) {
+                    }
+                     */
+                    else if (clientMessage.startsWith("Results: ")) {
                         String results = clientMessage.substring("Results: ".length());
 
                         // Create the result directory if it doesn't exist
@@ -186,7 +189,7 @@ public class MASTER {
                         }
 
                         // Write the results to the file without deleting the previous results
-                        FileWriter fileWriter = new FileWriter(RESULT_DIRECTORY + File.separator + "result.txt", true);
+                        FileWriter fileWriter = new FileWriter(RESULT_FILE, true);
                         PrintWriter printWriter = new PrintWriter(fileWriter);
                         printWriter.println(results);
                         fileWriter.close();
