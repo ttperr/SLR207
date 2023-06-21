@@ -19,7 +19,8 @@ public class SLAVE {
 
     private static final int PORT = 8888;
     private final ArrayList<String> machines = new ArrayList<>();
-    private final Socket[] sockets;
+    private final Socket[] socketsOutput;
+    private final Socket[] socketsInput;
     private final PrintWriter[] writers;
     private final BufferedReader[] readers;
     private ServerSocket serverSocket;
@@ -36,7 +37,8 @@ public class SLAVE {
 
         File machinesFile = new File(MACHINES_FILE);
         getMachines(machinesFile);
-        sockets = new Socket[machines.size()];
+        socketsOutput = new Socket[machines.size()];
+        socketsInput = new Socket[machines.size()];
         writers = new PrintWriter[machines.size()];
         readers = new BufferedReader[machines.size()];
 
@@ -45,8 +47,8 @@ public class SLAVE {
             System.out.println("Waiting for master...");
             Socket masterSocket = serverSocket.accept();
 
-            readerMaster = new BufferedReader(new InputStreamReader(masterSocket.getInputStream()));
             writerMaster = new PrintWriter(masterSocket.getOutputStream(), true);
+            readerMaster = new BufferedReader(new InputStreamReader(masterSocket.getInputStream()));
 
             System.out.println(
                     "Connected to : " + masterSocket.getInetAddress().getCanonicalHostName() + " on port " + PORT);
@@ -55,17 +57,21 @@ public class SLAVE {
             String line;
             while (true) {
                 line = readerMaster.readLine();
-                System.out.println("Received: " + line);
+                System.out.println("\nReceived: " + line);
 
                 if (line.equals("QUIT")) {
                     break;
 
                 } else if (line.equals("connectEachOther")) {
                     connectEachOther();
-                    for (Socket socket : sockets) {
+                    for (Socket socket : socketsOutput) {
                         if (socket != null) {
                             System.out.println(socket);
-                            System.out.println(socket.isClosed());
+                            System.out.println("Socket is closed ? " + socket.isClosed());
+                            System.out.println("Socket is connected ? " + socket.isConnected());
+                            System.out.println("Socket is bound ? " + socket.isBound());
+                            System.out.println("Socket is input shutdown ? " + socket.isInputShutdown());
+                            System.out.println("Socket is output shutdown ? " + socket.isOutputShutdown());
                         }
                     }
                     sayDoneToMaster();
@@ -120,7 +126,7 @@ public class SLAVE {
                 }
             }
             serverSocket.close();
-            for (Socket socket : sockets) {
+            for (Socket socket : socketsOutput) {
                 if (socket != null) {
                     socket.close();
                 }
@@ -130,59 +136,19 @@ public class SLAVE {
         }
     }
 
-    private void endOfShuffle() {
-        Thread shuffleThread = new Thread(this::sendShuffles);
-
-        ArrayList<Thread> listenShufflesThreads = new ArrayList<>();
-
-        for (int i = 0; i < sockets.length; i++) {
-            Socket socket = sockets[i];
-            if (socket != null && i != machineId) {
-                int finalI = i;
-                Thread shuffleReceiveThread = new Thread(() -> {
-                    try {
-                        listenShufflesMessages(finalI);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                });
-                listenShufflesThreads.add(shuffleReceiveThread);
-                shuffleReceiveThread.start();
-            }
-        }
-        // Démarrer l'exécution du thread
-        shuffleThread.start();
-
-        // Attendre la fin du thread
-        try {
-            for (Thread listenShufflesThread : listenShufflesThreads) {
-                listenShufflesThread.join();
-
-                System.out.println("join");
-            }
-            shuffleThread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
     private void sayDoneToMaster() throws IOException {
         writerMaster.println("DONE.");
     }
+
 
     private void connectEachOther() throws IOException {
         Thread connectThread = new Thread(() -> {
             try {
                 for (int machineId = 0; machineId < machines.size(); machineId++) {
-                    // Lock sockets
-                    synchronized (sockets) {
-                        if (machineId != this.machineId && sockets[machineId] == null) {
-                            sockets[machineId] = new Socket(machines.get(machineId), PORT);
-                            readers[machineId] = new BufferedReader(
-                                    new InputStreamReader(sockets[machineId].getInputStream()));
-                            writers[machineId] = new PrintWriter(sockets[machineId].getOutputStream(), true);
-                            System.out.println("from demand, Connected to " + machines.get(machineId));
-                        }
+                    if (machineId != this.machineId) {
+                        socketsOutput[machineId] = new Socket(machines.get(machineId), PORT);
+                        writers[machineId] = new PrintWriter(socketsOutput[machineId].getOutputStream(), true);
+                        System.out.println("from demand, Connected to " + machines.get(machineId));
                     }
                 }
             } catch (IOException e) {
@@ -192,17 +158,14 @@ public class SLAVE {
 
         Thread acceptThread = new Thread(() -> {
             try {
-                for (int machineId = 0; machineId < machines.size(); machineId++) {
-                    // Lock sockets
-                    synchronized (sockets) {
-                        if (machineId != this.machineId && sockets[machineId] == null) {
-                            sockets[machineId] = serverSocket.accept();
-                            readers[machineId] = new BufferedReader(
-                                    new InputStreamReader(sockets[machineId].getInputStream()));
-                            writers[machineId] = new PrintWriter(sockets[machineId].getOutputStream(), true);
-                            System.out.println("from accept, Connected to " + machines.get(machineId));
-                        }
-                    }
+                for (int count = 0; count < machines.size() - 1; count++) {
+                    Socket tempSocket = serverSocket.accept();
+                    String address = tempSocket.getInetAddress().getCanonicalHostName();
+                    int machineId = machines.indexOf(address);
+                    socketsInput[machineId] = tempSocket;
+                    readers[machineId] = new BufferedReader(
+                            new InputStreamReader(tempSocket.getInputStream()));
+                    System.out.println("from accept, Connected to " + machines.get(machineId));
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -214,7 +177,9 @@ public class SLAVE {
 
         try {
             connectThread.join();
+            System.out.println("Connect thread finished.");
             acceptThread.join();
+            System.out.println("Accept thread finished.");
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -297,7 +262,7 @@ public class SLAVE {
         }
     }
 
-    private void sendShuffles() {
+    private synchronized void sendShuffles() {
         try {
             File shuffleReceivedDirectory = new File(SHUFFLE_RECEIVED_DIRECTORY);
             shuffleReceivedDirectory.mkdirs();
@@ -323,7 +288,18 @@ public class SLAVE {
                 }
 
                 if (machineNumber == machineId) {
-                    Runtime.getRuntime().exec("cp " + shuffleFile.getAbsolutePath() + " " + SHUFFLE_RECEIVED_DIRECTORY);
+                    File shuffleReceveidFile = new File(SHUFFLE_RECEIVED_DIRECTORY + File.separator + shuffleFile.getName());
+                    // create shuffle received file
+                    shuffleReceveidFile.createNewFile();
+                    // read all lines of shuffle file
+                    BufferedReader reader = new BufferedReader(new FileReader(shuffleFile));
+                    String line = reader.readLine();
+                    reader.close();
+                    // append the line to the shuffle received file
+                    BufferedWriter writer = new BufferedWriter(new FileWriter(shuffleReceveidFile, true));
+                    writer.write(line);
+                    writer.newLine();
+                    writer.close();
                 } else {
                     // Read the line of the file
                     BufferedReader reader = new BufferedReader(new FileReader(shuffleFile));
@@ -350,7 +326,6 @@ public class SLAVE {
     private void listenShufflesMessages(int machineNumber) throws IOException {
         String line;
         while (true) {
-            System.out.println("Waiting for message from machine " + machineNumber);
             if ((line = readers[machineNumber].readLine()) != null) {
                 System.out.println("Message received from machine " + machineNumber + ": " + line);
 
@@ -365,7 +340,41 @@ public class SLAVE {
         }
     }
 
-    private void processShuffleReceived(String shuffleReceived) {
+    private void endOfShuffle() {
+        Thread shuffleThread = new Thread(this::sendShuffles);
+
+        ArrayList<Thread> listenShufflesThreads = new ArrayList<>();
+
+        for (int i = 0; i < socketsOutput.length; i++) {
+            Socket socket = socketsOutput[i];
+            if (socket != null && i != machineId) {
+                int finalI = i;
+                Thread shuffleReceiveThread = new Thread(() -> {
+                    try {
+                        listenShufflesMessages(finalI);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
+                listenShufflesThreads.add(shuffleReceiveThread);
+                shuffleReceiveThread.start();
+            }
+        }
+        // Démarrer l'exécution du thread
+        shuffleThread.start();
+
+        // Attendre la fin du thread
+        try {
+            for (Thread listenShufflesThread : listenShufflesThreads) {
+                listenShufflesThread.join();
+            }
+            shuffleThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private synchronized void processShuffleReceived(String shuffleReceived) {
         try {
             String key = shuffleReceived.split(", ")[0];
             String filename = getShuffleFilename(key);
@@ -390,6 +399,7 @@ public class SLAVE {
 
         return hash + "_" + hostname + ".txt";
     }
+
 
     private void launchReduce() {
         try {
@@ -437,6 +447,7 @@ public class SLAVE {
         }
     }
 
+
     private void launchResult() {
         File reduceDirectory = new File(REDUCE_DIRECTORY);
         File[] reduceFiles = reduceDirectory.listFiles();
@@ -452,6 +463,7 @@ public class SLAVE {
             }
         }
     }
+
 
     private void getMachines(File machinesFile) {
         try {

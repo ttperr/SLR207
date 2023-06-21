@@ -155,8 +155,8 @@ public class MASTER {
                 throw new IOException("Unauthorized machine: " + ipAddress);
             }
             this.clientSocket = new Socket(ipAddress, PORT);
-            this.in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             this.out = new PrintWriter(clientSocket.getOutputStream(), true);
+            this.in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         }
 
         @Override
