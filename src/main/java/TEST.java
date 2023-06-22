@@ -2,8 +2,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.util.HashMap;
 
@@ -14,9 +12,9 @@ public class TEST {
 
     public static void main(String[] args) throws IOException {
         if (countWordsOccurrence()) {
-            System.out.println("Test passed :)");
+            System.out.println("\nTest passed :)");
         } else {
-            System.out.println("Test failed :(");
+            System.out.println("\nTest failed :(");
         }
     }
 
@@ -30,13 +28,13 @@ public class TEST {
         content = content.replaceAll(" +", " ");
 
         String[] words = content.split(" ");
-        HashMap<String, Integer> wordsOccurence = new HashMap<>();
+        HashMap<String, Integer> wordsOccurrence = new HashMap<>();
 
         for (String word : words) {
-            if (wordsOccurence.containsKey(word)) {
-                wordsOccurence.put(word, wordsOccurence.get(word) + 1);
+            if (wordsOccurrence.containsKey(word)) {
+                wordsOccurrence.put(word, wordsOccurrence.get(word) + 1);
             } else {
-                wordsOccurence.put(word, 1);
+                wordsOccurrence.put(word, 1);
             }
         }
 
@@ -46,10 +44,12 @@ public class TEST {
         while((line = reader.readLine()) != null) {
             String[] keyVal = line.split(", ");
             int val = Integer.parseInt(keyVal[1]);
-            if (wordsOccurence.get(keyVal[0]) != val) {
+            if (wordsOccurrence.get(keyVal[0]) != val) {
+                reader.close();;
                 return false;
             }
         }
+        reader.close();
         return true;
     }
 }

@@ -26,7 +26,8 @@ public class DEPLOY {
     public static final String TEXT_DIR = "text";
     public static final String TEXT_FILE = TEXT_DIR + File.separator + MASTER.TEXT_NAME;
 
-    private static final boolean isTest = true;
+    public static final boolean isTest = true;
+    private static final boolean autoLaunch = false;
 
     public static void main(String[] args) {
         new DEPLOY();
@@ -110,11 +111,6 @@ public class DEPLOY {
             // Le fichier a été déplacé avec succès
             System.out.println("Fichier " + SLAVE_JAR + " déplacé avec succès");
 
-            // Pré process du fichier txt
-            if (isTest) {
-                preProcessFile(machines);
-            }
-
             ProcessBuilder moveMachinesFileToDir = new ProcessBuilder("cp", MACHINES_FILE, "." + REMOTE_DIR);
             Process moveMachinesFileToDirProcess = moveMachinesFileToDir.start();
             int moveMachinesFileToDirExitCode = moveMachinesFileToDirProcess.waitFor();
@@ -124,6 +120,11 @@ public class DEPLOY {
             }
             // Le fichier a été déplacé avec succès
             System.out.println("Fichier machines.txt déplacé avec succès");
+
+            if (isTest) {
+                // Pré process du fichier txt
+                preProcessFile(machines);
+            }
 
             // Création du dossier SPLIT_DIR
             ProcessBuilder mkdirSplitDir = new ProcessBuilder("mkdir", "-p", "." + SPLIT_DIR);
@@ -184,14 +185,14 @@ public class DEPLOY {
                         System.out.println("Fichier split S" + machineNumber + " supprimé avec succès");
                     }
 
-                    /* Lancement du programme sur la machine distante
-                    // Lancer le programme sur la machine distante
-                    ProcessBuilder sshPb = new ProcessBuilder("ssh", machine, "java", "-jar",
-                    REMOTE_DIR + File.separator + SLAVE_JAR);
-                    sshPb.start();
-                    System.out.println(
-                    "Programme lancé sur la machine " + machineNumber + ": " + ipAddress + "\n");
-                    */
+                    if (autoLaunch) {
+                        // Lancement du programme sur la machine distante
+                        ProcessBuilder sshPb = new ProcessBuilder("ssh", machine, "java", "-jar",
+                                REMOTE_DIR + File.separator + SLAVE_JAR);
+                        sshPb.start();
+                        System.out.println(
+                                "Programme lancé sur la machine " + machineNumber + ": " + ipAddress + "\n");
+                    }
 
                     if (machineNumber != 0 && machineNumber % 5 == 0) {
                         Thread.sleep(60000);

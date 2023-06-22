@@ -17,6 +17,8 @@ public class SLAVE {
 
     private static final String MACHINES_FILE = HOME_DIRECTORY + "/machines.txt";
 
+    private static final String FILE_TO_PROCESS = "/cal/exterieurs/tperrot-21/sante.txt";
+
     private static final int PORT = 8888;
     private final ArrayList<String> machines = new ArrayList<>();
     private final Socket[] socketsOutput;
@@ -29,7 +31,10 @@ public class SLAVE {
     private BufferedReader readerMaster;
     private PrintWriter writerMaster;
 
-    public static void main(String[] args) throws NumberFormatException, InterruptedException {
+    public static final boolean isTest = true;
+    public static final boolean verbose = true;
+
+    public static void main(String[] args) throws NumberFormatException, InterruptedException, IOException {
         new SLAVE();
     }
 
@@ -64,20 +69,16 @@ public class SLAVE {
 
                 } else if (line.equals("connectEachOther")) {
                     connectEachOther();
-                    for (Socket socket : socketsOutput) {
-                        if (socket != null) {
-                            System.out.println(socket);
-                            System.out.println("Socket is closed ? " + socket.isClosed());
-                            System.out.println("Socket is connected ? " + socket.isConnected());
-                            System.out.println("Socket is bound ? " + socket.isBound());
-                            System.out.println("Socket is input shutdown ? " + socket.isInputShutdown());
-                            System.out.println("Socket is output shutdown ? " + socket.isOutputShutdown());
-                        }
-                    }
+                    System.out.println("Connected each other.");
                     sayDoneToMaster();
                 } else if (line.startsWith("launchMap")) {
-                    String inputFile = line.split(" ")[1];
-                    launchMap(inputFile);
+                    if (isTest) {
+                        String inputFile = line.split(" ")[1];
+                        launchMap(inputFile, 0, Double.POSITIVE_INFINITY);
+                    } else {
+                        launchMapOnBigFile(FILE_TO_PROCESS);
+                    }
+
                     sayDoneToMaster();
 
                 } else if (line.startsWith("launchShuffle")) {
@@ -148,7 +149,6 @@ public class SLAVE {
                     if (machineId != this.machineId) {
                         socketsOutput[machineId] = new Socket(machines.get(machineId), PORT);
                         writers[machineId] = new PrintWriter(socketsOutput[machineId].getOutputStream(), true);
-                        System.out.println("from demand, Connected to " + machines.get(machineId));
                     }
                 }
             } catch (IOException e) {
@@ -165,7 +165,6 @@ public class SLAVE {
                     socketsInput[machineId] = tempSocket;
                     readers[machineId] = new BufferedReader(
                             new InputStreamReader(tempSocket.getInputStream()));
-                    System.out.println("from accept, Connected to " + machines.get(machineId));
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -177,29 +176,31 @@ public class SLAVE {
 
         try {
             connectThread.join();
-            System.out.println("Connect thread finished.");
             acceptThread.join();
-            System.out.println("Accept thread finished.");
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
 
-    private void launchMap(String inputFile) {
+    private void launchMap(String inputFile, double start, double numberOfLine) {
         try {
+            System.out.println("Launching map on " + inputFile + " from " + start + " to " + (start + numberOfLine));
+
             BufferedReader reader = new BufferedReader(new FileReader(inputFile));
             String line;
             HashMap<String, Integer> wordCountMap = new HashMap<>();
-
-            while ((line = reader.readLine()) != null) {
-                String[] words = line.split(" ");
-                for (String word : words) {
-                    if (wordCountMap.containsKey(word)) {
-                        int count = wordCountMap.get(word);
-                        wordCountMap.put(word, count + 1);
-                    } else {
-                        wordCountMap.put(word, 1);
+            int lineRead = 0;
+            while ((line = reader.readLine()) != null && lineRead < start + numberOfLine) {
+                if (lineRead >= start) {
+                    String[] words = line.split(" ");
+                    for (String word : words) {
+                        if (wordCountMap.containsKey(word)) {
+                            int count = wordCountMap.get(word);
+                            wordCountMap.put(word, count + 1);
+                        } else {
+                            wordCountMap.put(word, 1);
+                        }
                     }
                 }
             }
@@ -209,8 +210,7 @@ public class SLAVE {
             File mapDirectory = new File(MAP_DIRECTORY);
             mapDirectory.mkdirs();
 
-            String outputFileName = "UM" + inputFile.substring(inputFile.indexOf("S") + 1, inputFile.indexOf(".txt"))
-                    + ".txt";
+            String outputFileName = "UM" + machineId + ".txt";
             String outputFilePath = MAP_DIRECTORY + File.separator + outputFileName;
             File outputFile = new File(outputFilePath);
             outputFile.createNewFile();
@@ -228,6 +228,25 @@ public class SLAVE {
             System.out.println("Map calculation completed for file " + inputFile);
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void launchMapOnBigFile(String inputFile) {
+        // Cut the file in machines.size() parts.
+
+        try {
+            LineNumberReader reader = new LineNumberReader(new FileReader(inputFile));
+            reader.skip(Long.MAX_VALUE);
+            double lines = reader.getLineNumber();
+            reader.close();
+
+            double linesPerMachine = lines / machines.size();
+
+            launchMap(inputFile, machineId * linesPerMachine, (machineId + 1) * linesPerMachine);
+
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -288,15 +307,15 @@ public class SLAVE {
                 }
 
                 if (machineNumber == machineId) {
-                    File shuffleReceveidFile = new File(SHUFFLE_RECEIVED_DIRECTORY + File.separator + shuffleFile.getName());
+                    File shuffleReceivedFile = new File(SHUFFLE_RECEIVED_DIRECTORY + File.separator + shuffleFile.getName());
                     // create shuffle received file
-                    shuffleReceveidFile.createNewFile();
+                    shuffleReceivedFile.createNewFile();
                     // read all lines of shuffle file
                     BufferedReader reader = new BufferedReader(new FileReader(shuffleFile));
                     String line = reader.readLine();
                     reader.close();
                     // append the line to the shuffle received file
-                    BufferedWriter writer = new BufferedWriter(new FileWriter(shuffleReceveidFile, true));
+                    BufferedWriter writer = new BufferedWriter(new FileWriter(shuffleReceivedFile, true));
                     writer.write(line);
                     writer.newLine();
                     writer.close();
@@ -310,7 +329,9 @@ public class SLAVE {
                     //writerMaster.println(line);
                     writers[machineNumber].println("ShuffleReceived: " + line);
 
-                    System.out.println("Message sent to machine " + machineNumber + ": " + line);
+                    if (verbose) {
+                        System.out.println("Message sent to machine " + machineNumber + ": " + line);
+                    }
                 }
             }
             for (PrintWriter writer : writers) {
@@ -327,7 +348,9 @@ public class SLAVE {
         String line;
         while (true) {
             if ((line = readers[machineNumber].readLine()) != null) {
-                System.out.println("Message received from machine " + machineNumber + ": " + line);
+                if (verbose) {
+                    System.out.println("Message received from machine " + machineNumber + ": " + line);
+                }
 
                 if (line.startsWith("ShuffleReceived: ")) {
                     processShuffleReceived(line.substring("ShuffleReceived: ".length()));
@@ -341,6 +364,7 @@ public class SLAVE {
     }
 
     private void endOfShuffle() {
+        System.out.println("End of shuffle");
         Thread shuffleThread = new Thread(this::sendShuffles);
 
         ArrayList<Thread> listenShufflesThreads = new ArrayList<>();

@@ -18,6 +18,7 @@ public class CLEAN {
 
     public CLEAN() {
         try {
+
             // Lire le fichier "machines.txt"
             Path machinesFilePath = Path.of(MACHINES_FILE);
             List<String> machines = Files.readAllLines(machinesFilePath);

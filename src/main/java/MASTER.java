@@ -19,6 +19,8 @@ public class MASTER {
 
     public static final String MACHINES_FILE = "data/machines.txt";
 
+    public static final boolean isTest = DEPLOY.isTest;
+
 
     private final List<ServerHandler> servers = new ArrayList<>(); // Liste des clients connectés
     private List<String> machines = new ArrayList<>();
@@ -58,44 +60,62 @@ public class MASTER {
         System.out.println("Répertoires créés sur les machines.");
         */
 
+        // Calcul du temps
+        long startTime = System.currentTimeMillis();
         runConnectEachOther();
         waitForCommand();
-
+        long endTime = System.currentTimeMillis();
         System.out.println("FULL DISTRIBUTED SERVER CREATED");
 
-        // Lancer la phase de map sur les machines
-        runMapPhase();
+        System.out.println("Temps de connexion : " + (endTime - startTime) / 100 + "s");
 
+        // Lancer la phase de map sur les machines
+        long startTime2 = System.currentTimeMillis();
+        runMapPhase();
         // Attendre que tous les SLAVES se terminent
         waitForCommand();
-
+        long endTime2 = System.currentTimeMillis();
         System.out.println("MAP FINISHED");
 
-        // Lancer la phase de shuffle sur les machines
-        runShufflePhase();
+        System.out.println("Temps de map : " + (endTime2 - startTime2) / 100 + "s");
 
+
+        // Lancer la phase de shuffle sur les machines
+        long startTime3 = System.currentTimeMillis();
+        runShufflePhase();
         // Attendre que tous les SLAVES se terminent
         waitForCommand();
+        long endTime3 = System.currentTimeMillis();
         System.out.println("SHUFFLE FINISHED");
 
-        // Lancer la phase reduce sur les machines
-        runReducePhase();
+        System.out.println("Temps de shuffle : " + (endTime3 - startTime3) / 100 + "s");
 
+        // Lancer la phase reduce sur les machines
+        long startTime4 = System.currentTimeMillis();
+        runReducePhase();
         // Attendre que tous les SLAVES se terminent
         waitForCommand();
+        long endTime4 = System.currentTimeMillis();
         System.out.println("REDUCE FINISHED");
 
-        // Copier les fichiers de reduce vers la machine locale
-        runResultPhase();
+        System.out.println("Temps de reduce : " + (endTime4 - startTime4) / 100 + "s");
 
-        // Attendre que tous les SLAVES se terminent
-        waitForCommand();
+        if (isTest) {
+            // Copier les fichiers de reduce vers la machine locale
+            runResultPhase();
 
-        System.out.println("Résultats fusionnés et présents dans results/" + TEXT_NAME);
+            // Attendre que tous les SLAVES se terminent
+            waitForCommand();
 
+            System.out.println("Résultats fusionnés et présents dans results/" + TEXT_NAME);
+        }
         // Ferme tous les clients
         servers.forEach(ServerHandler::close);
         System.out.println("Finished.");
+
+        // Calcul du temps total
+        long endTime5 = System.currentTimeMillis();
+        System.out.println("Temps total : " + (endTime5 - startTime) / 100 + "s");
 
     }
 
