@@ -17,7 +17,7 @@ public class SLAVE {
 
     private static final String MACHINES_FILE = HOME_DIRECTORY + "/machines.txt";
 
-    private static final String FILE_TO_PROCESS = "/cal/exterieurs/tperrot-21/sante.txt";
+    private static final String FILE_TO_PROCESS = "/cal/commoncrawl/CC-MAIN-20230320083513-20230320113513-00000.warc.wet";
 
     private static final int PORT = 8888;
     private final ArrayList<String> machines = new ArrayList<>();
@@ -31,7 +31,7 @@ public class SLAVE {
     private BufferedReader readerMaster;
     private PrintWriter writerMaster;
 
-    public static final boolean isTest = true;
+    public static final boolean isTest = false;
     public static final boolean verbose = true;
 
     public static void main(String[] args) throws NumberFormatException, InterruptedException, IOException {
@@ -239,8 +239,9 @@ public class SLAVE {
             reader.skip(Long.MAX_VALUE);
             double lines = reader.getLineNumber();
             reader.close();
-
+            System.out.println("Lines: " + lines);
             double linesPerMachine = lines / machines.size();
+            linesPerMachine = 1; // TODO: remove this line.
 
             launchMap(inputFile, machineId * linesPerMachine, (machineId + 1) * linesPerMachine);
 
