@@ -105,12 +105,12 @@ public class SLAVE {
                     sayDoneToMaster();
 
                 } else if (line.equals("launchShuffleSort")) {
-                    launchShuffleSort();
-                    endOfShuffleSort();
+                    // TODO launchShuffleSort();
+                    // TODO endOfShuffleSort();
                     sayDoneToMaster();
 
                 } else if (line.equals("launchReduceSort")) {
-                    launchReduceSort();
+                    // TODO launchReduceSort();
                     sayDoneToMaster();
 
                 } else if (line.startsWith("launchResult")) {
@@ -338,7 +338,7 @@ public class SLAVE {
 
                 // writerMaster.println("Send: " + machineNumber);
                 // writerMaster.println(line);
-                writers[machineNumber].println("ShuffleReceived: " + line);
+                writers[machineNumber].println("ShuffleReceivedCount: " + line);
 
                 if (verbose) {
                     System.out.println("Message sent to machine " + machineNumber + ": " + line);
@@ -360,13 +360,15 @@ public class SLAVE {
                     System.out.println("Message received from machine " + machineNumber + ": " + line);
                 }
 
-                if (line.startsWith("ShuffleReceived: ")) {
+                if (line.startsWith("ShuffleReceivedCount: ")) {
                     processShuffleReceived(line.substring("ShuffleReceived: ".length()));
+                } else if (line.startsWith("ShuffleReceivedSort: ")) {
+                    processShuffleReceivedSort(line.substring("ShuffleReceivedSort: ".length()));
                 } else if (line.equals("DONE.")) {
                     break;
                 } else {
                     throw new IllegalStateException("Unknown message: " + line);
-                }
+                } 
             }
         }
     }
@@ -542,6 +544,10 @@ public class SLAVE {
             }
         }
 
+    }
+
+    private void endOfShuffleSort() throws IOException {
+        
     }
 
     private void launchResult() {

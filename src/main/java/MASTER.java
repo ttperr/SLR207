@@ -106,25 +106,25 @@ public class MASTER {
         waitForCommand();
         long endTime5 = System.currentTimeMillis();
 
-        System.out.println("Temps de map sort : " + (endTime5 - startTime5) / 100 + "s");
+        // TODO System.out.println("Temps de map sort : " + (endTime5 - startTime5) / 100 + "s");
 
-        // Lancer la phase shuffle sur les machines
-        long startTime6 = System.currentTimeMillis();
-        runShuffleSortPhase();
-        // Attendre que tous les SLAVES se terminent
-        waitForCommand();
-        long endTime6 = System.currentTimeMillis();
+        // TODO // Lancer la phase shuffle sur les machines
+        // TODO long startTime6 = System.currentTimeMillis();
+        // TODO runShuffleSortPhase();
+        // TODO // Attendre que tous les SLAVES se terminent
+        // TODO waitForCommand();
+        // TODO long endTime6 = System.currentTimeMillis();
 
-        System.out.println("Temps de shuffle sort : " + (endTime6 - startTime6) / 100 + "s");
+        // TODO System.out.println("Temps de shuffle sort : " + (endTime6 - startTime6) / 100 + "s");
 
-        // Lancer la phase reduce sur les machines
-        long startTime7 = System.currentTimeMillis();
-        runReduceSortPhase();
-        // Attendre que tous les SLAVES se terminent
-        waitForCommand();
-        long endTime7 = System.currentTimeMillis();
+        // TODO // Lancer la phase reduce sur les machines
+        // TODO long startTime7 = System.currentTimeMillis();
+        // TODO runReduceSortPhase();
+        // TODO // Attendre que tous les SLAVES se terminent
+        // TODO waitForCommand();
+        // TODO long endTime7 = System.currentTimeMillis();
 
-        System.out.println("Temps de reduce sort : " + (endTime7 - startTime7) / 100 + "s");
+        // TODO System.out.println("Temps de reduce sort : " + (endTime7 - startTime7) / 100 + "s");
 
 
         if (isTest) {
@@ -232,7 +232,7 @@ public class MASTER {
 
                         // Send the message to the right machine
                         int machineToSend = Integer.parseInt(machineNumber);
-                        servers.get(machineToSend).sendCommand("ShuffleReceived: " + messageToSend);
+                        servers.get(machineToSend).sendCommand("ShuffleReceivedCount: " + messageToSend);
 
                         System.out.println("Message sent to machine " + machineToSend + ": " + messageToSend);
                     }
