@@ -361,9 +361,9 @@ public class SLAVE {
                 }
 
                 if (line.startsWith("ShuffleReceivedCount: ")) {
-                    processShuffleReceived(line.substring("ShuffleReceived: ".length()));
+                    processShuffleReceived(line.substring("ShuffleReceivedCount: ".length()));
                 } else if (line.startsWith("ShuffleReceivedSort: ")) {
-                    processShuffleReceivedSort(line.substring("ShuffleReceivedSort: ".length()));
+                    // TODO processShuffleReceivedSort(line.substring("ShuffleReceivedSort: ".length()));
                 } else if (line.equals("DONE.")) {
                     break;
                 } else {
