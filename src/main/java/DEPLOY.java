@@ -26,7 +26,7 @@ public class DEPLOY {
     public static final String TEXT_DIR = "text";
     public static final String TEXT_FILE = TEXT_DIR + File.separator + MASTER.TEXT_NAME;
 
-    public static final boolean isTest = false;
+    public static final boolean isTest = true;
     private static final boolean autoLaunch = false;
 
     public static void main(String[] args) {

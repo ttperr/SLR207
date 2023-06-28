@@ -10,7 +10,7 @@ public class MASTER {
 
     public static final String HOME_DIRECTORY = "/tmp/" + USERNAME;
     public static final String SPLIT_DIRECTORY_REMOTE = HOME_DIRECTORY + "/splits";
-    public static final String MAP_DIRECTORY_REMOTE = HOME_DIRECTORY + "/maps";
+    public static final String MAP_COUNT_DIRECTORY_REMOTE = HOME_DIRECTORY + "/mapsCount";
 
     public static final String TEXT_NAME = "code.txt";
 
@@ -71,34 +71,61 @@ public class MASTER {
 
         // Lancer la phase de map sur les machines
         long startTime2 = System.currentTimeMillis();
-        runMapPhase();
+        runMapCountPhase();
         // Attendre que tous les SLAVES se terminent
         waitForCommand();
         long endTime2 = System.currentTimeMillis();
-        System.out.println("MAP FINISHED");
+        System.out.println("MAP COUNT FINISHED");
 
-        System.out.println("Temps de map : " + (endTime2 - startTime2) / 100 + "s");
+        System.out.println("Temps de map count : " + (endTime2 - startTime2) / 100 + "s");
 
 
         // Lancer la phase de shuffle sur les machines
         long startTime3 = System.currentTimeMillis();
-        runShufflePhase();
+        runShuffleCountPhase();
         // Attendre que tous les SLAVES se terminent
         waitForCommand();
         long endTime3 = System.currentTimeMillis();
-        System.out.println("SHUFFLE FINISHED");
+        System.out.println("SHUFFLE COUNT FINISHED");
 
-        System.out.println("Temps de shuffle : " + (endTime3 - startTime3) / 100 + "s");
+        System.out.println("Temps de shuffle count : " + (endTime3 - startTime3) / 100 + "s");
 
         // Lancer la phase reduce sur les machines
         long startTime4 = System.currentTimeMillis();
-        runReducePhase();
+        runReduceCountPhase();
         // Attendre que tous les SLAVES se terminent
         waitForCommand();
         long endTime4 = System.currentTimeMillis();
-        System.out.println("REDUCE FINISHED");
+        System.out.println("REDUCE COUNT FINISHED");
 
-        System.out.println("Temps de reduce : " + (endTime4 - startTime4) / 100 + "s");
+        System.out.println("Temps de reduce count : " + (endTime4 - startTime4) / 100 + "s");
+
+        long startTime5 = System.currentTimeMillis();
+        runMapSortPhase();
+        // Attendre que tous les SLAVES se terminent
+        waitForCommand();
+        long endTime5 = System.currentTimeMillis();
+
+        System.out.println("Temps de map sort : " + (endTime5 - startTime5) / 100 + "s");
+
+        // Lancer la phase shuffle sur les machines
+        long startTime6 = System.currentTimeMillis();
+        runShuffleSortPhase();
+        // Attendre que tous les SLAVES se terminent
+        waitForCommand();
+        long endTime6 = System.currentTimeMillis();
+
+        System.out.println("Temps de shuffle sort : " + (endTime6 - startTime6) / 100 + "s");
+
+        // Lancer la phase reduce sur les machines
+        long startTime7 = System.currentTimeMillis();
+        runReduceSortPhase();
+        // Attendre que tous les SLAVES se terminent
+        waitForCommand();
+        long endTime7 = System.currentTimeMillis();
+
+        System.out.println("Temps de reduce sort : " + (endTime7 - startTime7) / 100 + "s");
+
 
         if (isTest) {
             // Copier les fichiers de reduce vers la machine locale
@@ -114,8 +141,8 @@ public class MASTER {
         System.out.println("Finished.");
 
         // Calcul du temps total
-        long endTime5 = System.currentTimeMillis();
-        System.out.println("Temps total : " + (endTime5 - startTime) / 100 + "s");
+        long endTime8 = System.currentTimeMillis();
+        System.out.println("Temps total : " + (endTime8 - startTime) / 100 + "s");
 
     }
 
@@ -137,19 +164,30 @@ public class MASTER {
         servers.forEach(client -> client.sendCommand("connectEachOther"));
     }
 
-    private void runMapPhase() {
-        servers.forEach(client -> client.sendCommand("launchMap " +
+    private void runMapCountPhase() {
+        servers.forEach(client -> client.sendCommand("launchMapCount " +
                 SPLIT_DIRECTORY_REMOTE + File.separator + "S" + client.getMachineId() + ".txt"));
     }
 
-    private void runShufflePhase() {
-        servers.forEach(client -> client.sendCommand("launchShuffle " +
-                MAP_DIRECTORY_REMOTE + File.separator + "UM" + client.getMachineId() + ".txt"));
+    private void runShuffleCountPhase() {
+        servers.forEach(client -> client.sendCommand("launchShuffleCount"));
 
     }
 
-    private void runReducePhase() {
-        servers.forEach(server -> server.sendCommand("launchReduce"));
+    private void runReduceCountPhase() {
+        servers.forEach(server -> server.sendCommand("launchReduceCount"));
+    }
+
+    private void runMapSortPhase() {
+        servers.forEach(server -> server.sendCommand("launchMapSort"));
+    }
+
+    private void runShuffleSortPhase() {
+        servers.forEach(server -> server.sendCommand("launchShuffleSort"));
+    }
+
+    private void runReduceSortPhase() {
+        servers.forEach(server -> server.sendCommand("launchReduceSort"));
     }
 
     private void runResultPhase() {
@@ -208,7 +246,7 @@ public class MASTER {
                             resultDirectory.mkdir();
                         }
 
-                        // Write the results to the file without deleting the previous results
+                        // Write the results to the file without deleting the previous results and by adding it compared to the previous occurrence = split(", ")[1] to get sorted results
                         FileWriter fileWriter = new FileWriter(RESULT_FILE, true);
                         PrintWriter printWriter = new PrintWriter(fileWriter);
                         printWriter.println(results);

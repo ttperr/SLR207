@@ -3,6 +3,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -10,14 +11,19 @@ public class SLAVE {
     private static final String USERNAME = "tperrot-21";
 
     private static final String HOME_DIRECTORY = "/tmp/" + USERNAME;
-    private static final String MAP_DIRECTORY = HOME_DIRECTORY + "/maps";
-    private static final String SHUFFLE_DIRECTORY = HOME_DIRECTORY + "/shuffles";
-    private static final String SHUFFLE_RECEIVED_DIRECTORY = HOME_DIRECTORY + "/shufflesreceived";
-    private static final String REDUCE_DIRECTORY = HOME_DIRECTORY + "/reduces";
+    private static final String MAP_DIRECTORY = HOME_DIRECTORY + "/mapsCount";
+    private static final String SHUFFLE_DIRECTORY = HOME_DIRECTORY + "/shufflesCount";
+    private static final String SHUFFLE_RECEIVED_DIRECTORY = HOME_DIRECTORY + "/shufflesreceivedCount";
+    private static final String REDUCE_DIRECTORY = HOME_DIRECTORY + "/reducesCount";
+
+    private static final String MAP_SORT_DIRECTORY = HOME_DIRECTORY + "/mapsSort";
+    private static final String SHUFFLE_SORT_DIRECTORY = HOME_DIRECTORY + "/shufflesSort";
+    private static final String SHUFFLE_RECEIVED_SORT_DIRECTORY = HOME_DIRECTORY + "/shufflesreceivedSort";
+    private static final String REDUCE_SORT_DIRECTORY = HOME_DIRECTORY + "/reducesSort";
 
     private static final String MACHINES_FILE = HOME_DIRECTORY + "/machines.txt";
 
-    private static final String FILE_TO_PROCESS = "/cal/commoncrawl/CC-MAIN-20230320083513-20230320113513-00000.warc.wet";
+    private static final String BIG_FILE_TO_PROCESS = "/cal/commoncrawl/CC-MAIN-20230320083513-20230320113513-00000.warc.wet";
 
     private static final int PORT = 8888;
     private final ArrayList<String> machines = new ArrayList<>();
@@ -31,7 +37,10 @@ public class SLAVE {
     private BufferedReader readerMaster;
     private PrintWriter writerMaster;
 
-    public static final boolean isTest = false;
+    private int minCount;
+    private int maxCount;
+
+    public static final boolean isTest = true;
     public static final boolean verbose = true;
 
     public static void main(String[] args) throws NumberFormatException, InterruptedException, IOException {
@@ -58,7 +67,6 @@ public class SLAVE {
             System.out.println(
                     "Connected to : " + masterSocket.getInetAddress().getCanonicalHostName() + " on port " + PORT);
 
-
             String line;
             while (true) {
                 line = readerMaster.readLine();
@@ -71,26 +79,38 @@ public class SLAVE {
                     connectEachOther();
                     System.out.println("Connected each other.");
                     sayDoneToMaster();
-                } else if (line.startsWith("launchMap")) {
+                } else if (line.startsWith("launchMapCount")) {
                     if (isTest) {
                         String inputFile = line.split(" ")[1];
-                        launchMap(inputFile, 0, Double.POSITIVE_INFINITY);
+                        launchMapCount(inputFile, 0, Double.POSITIVE_INFINITY);
                     } else {
-                        launchMapOnBigFile(FILE_TO_PROCESS);
+                        launchMapCountOnBigFile(BIG_FILE_TO_PROCESS);
                     }
 
                     sayDoneToMaster();
 
-                } else if (line.startsWith("launchShuffle")) {
-                    String inputFile = line.split(" ")[1];
-                    launchShuffle(inputFile);
+                } else if (line.equals("launchShuffleCount")) {
+                    launchShuffleCount();
 
-                    endOfShuffle();
+                    endOfShuffleCount();
 
                     sayDoneToMaster();
 
-                } else if (line.equals("launchReduce")) {
-                    launchReduce();
+                } else if (line.equals("launchReduceCount")) {
+                    launchReduceCount();
+                    sayDoneToMaster();
+
+                } else if (line.equals("launchMapSort")) {
+                    launchMapSort();
+                    sayDoneToMaster();
+
+                } else if (line.equals("launchShuffleSort")) {
+                    launchShuffleSort();
+                    endOfShuffleSort();
+                    sayDoneToMaster();
+
+                } else if (line.equals("launchReduceSort")) {
+                    launchReduceSort();
                     sayDoneToMaster();
 
                 } else if (line.startsWith("launchResult")) {
@@ -141,7 +161,6 @@ public class SLAVE {
         writerMaster.println("DONE.");
     }
 
-
     private void connectEachOther() throws IOException {
         Thread connectThread = new Thread(() -> {
             try {
@@ -182,56 +201,51 @@ public class SLAVE {
         }
     }
 
+    private void launchMapCount(String inputFile, double start, double numberOfLine) throws IOException {
+        System.out.println("Launching map on " + inputFile + " from " + start + " to " + (start + numberOfLine));
 
-    private void launchMap(String inputFile, double start, double numberOfLine) {
-        try {
-            System.out.println("Launching map on " + inputFile + " from " + start + " to " + (start + numberOfLine));
-
-            BufferedReader reader = new BufferedReader(new FileReader(inputFile));
-            String line;
-            HashMap<String, Integer> wordCountMap = new HashMap<>();
-            int lineRead = 0;
-            while ((line = reader.readLine()) != null && lineRead < start + numberOfLine) {
-                if (lineRead >= start) {
-                    String[] words = line.split(" ");
-                    for (String word : words) {
-                        if (wordCountMap.containsKey(word)) {
-                            int count = wordCountMap.get(word);
-                            wordCountMap.put(word, count + 1);
-                        } else {
-                            wordCountMap.put(word, 1);
-                        }
+        BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+        String line;
+        HashMap<String, Integer> wordCountMap = new HashMap<>();
+        int lineRead = 0;
+        while ((line = reader.readLine()) != null && lineRead < start + numberOfLine) {
+            if (lineRead >= start) {
+                String[] words = line.split(" ");
+                for (String word : words) {
+                    if (wordCountMap.containsKey(word)) {
+                        int count = wordCountMap.get(word);
+                        wordCountMap.put(word, count + 1);
+                    } else {
+                        wordCountMap.put(word, 1);
                     }
                 }
             }
-
-            reader.close();
-
-            File mapDirectory = new File(MAP_DIRECTORY);
-            mapDirectory.mkdirs();
-
-            String outputFileName = "UM" + machineId + ".txt";
-            String outputFilePath = MAP_DIRECTORY + File.separator + outputFileName;
-            File outputFile = new File(outputFilePath);
-            outputFile.createNewFile();
-
-            BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
-
-            for (String word : wordCountMap.keySet()) {
-                int count = wordCountMap.get(word);
-                writer.write(word + ", " + count);
-                writer.newLine();
-            }
-
-            writer.close();
-
-            System.out.println("Map calculation completed for file " + inputFile);
-        } catch (IOException e) {
-            e.printStackTrace();
         }
+
+        reader.close();
+
+        File mapDirectory = new File(MAP_DIRECTORY);
+        mapDirectory.mkdirs();
+
+        String outputFileName = "UM" + machineId + ".txt";
+        String outputFilePath = MAP_DIRECTORY + File.separator + outputFileName;
+        File outputFile = new File(outputFilePath);
+        outputFile.createNewFile();
+
+        BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
+
+        for (String word : wordCountMap.keySet()) {
+            int count = wordCountMap.get(word);
+            writer.write(word + ", " + count);
+            writer.newLine();
+        }
+
+        writer.close();
+
+        System.out.println("Map calculation completed for file " + inputFile);
     }
 
-    private void launchMapOnBigFile(String inputFile) {
+    private void launchMapCountOnBigFile(String inputFile) {
         // Cut the file in machines.size() parts.
 
         try {
@@ -243,105 +257,98 @@ public class SLAVE {
             double linesPerMachine = lines / machines.size();
             linesPerMachine = 1; // TODO: remove this line.
 
-            launchMap(inputFile, machineId * linesPerMachine, (machineId + 1) * linesPerMachine);
-
+            launchMapCount(inputFile, machineId * linesPerMachine, (machineId + 1) * linesPerMachine);
 
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void launchShuffle(String inputFile) {
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader(inputFile));
-            File shuffleDirectory = new File(SHUFFLE_DIRECTORY);
-            shuffleDirectory.mkdirs();
+    private void launchShuffleCount() throws IOException {
+        String inputFile = MAP_DIRECTORY + File.separator + "UM" + machineId + ".txt";
+        BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+        File shuffleDirectory = new File(SHUFFLE_DIRECTORY);
+        shuffleDirectory.mkdirs();
 
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] keyValue = line.split(", ");
-                if (keyValue.length == 2) {
-                    String key = keyValue[0];
-                    String value = keyValue[1];
-                    String outputFileName = getShuffleFilename(key);
-                    String outputFilePath = SHUFFLE_DIRECTORY + File.separator + outputFileName;
-                    File outputFile = new File(outputFilePath);
-                    BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
-                    writer.write(key + ", " + value);
-                    writer.newLine();
-                    writer.close();
-                }
+        String line;
+        while ((line = reader.readLine()) != null) {
+            String[] keyValue = line.split(", ");
+            if (keyValue.length == 2) {
+                String key = keyValue[0];
+                String value = keyValue[1];
+                String outputFileName = getShuffleFilename(key);
+                String outputFilePath = SHUFFLE_DIRECTORY + File.separator + outputFileName;
+                File outputFile = new File(outputFilePath);
+                BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
+                writer.write(key + ", " + value);
+                writer.newLine();
+                writer.close();
             }
-
-            reader.close();
-
-            System.out.println("Shuffle calculation completed for file " + inputFile);
-
-        } catch (IOException e) {
-            e.printStackTrace();
         }
+
+        reader.close();
+
+        System.out.println("Shuffle calculation completed for file " + inputFile);
+
     }
 
-    private synchronized void sendShuffles() {
-        try {
-            File shuffleReceivedDirectory = new File(SHUFFLE_RECEIVED_DIRECTORY);
-            shuffleReceivedDirectory.mkdirs();
-            File shuffleDirectory = new File(SHUFFLE_DIRECTORY);
-            File[] shuffleFiles = shuffleDirectory.listFiles();
+    private synchronized void sendShuffles() throws IOException {
+        File shuffleReceivedDirectory = new File(SHUFFLE_RECEIVED_DIRECTORY);
+        shuffleReceivedDirectory.mkdirs();
+        File shuffleDirectory = new File(SHUFFLE_DIRECTORY);
+        File[] shuffleFiles = shuffleDirectory.listFiles();
 
-            assert shuffleFiles != null;
-            for (File shuffleFile : shuffleFiles) {
-                String hashString = shuffleFile.getName().split("_")[0];
-                int hash = Integer.parseInt(hashString);
-                int machineNumber = hash % machines.size();
-                if (machineNumber < 0) {
-                    machineNumber += machines.size();
-                }
+        assert shuffleFiles != null;
+        for (File shuffleFile : shuffleFiles) {
+            String hashString = shuffleFile.getName().split("_")[0];
+            int hash = Integer.parseInt(hashString);
+            int machineNumber = hash % machines.size();
+            if (machineNumber < 0) {
+                machineNumber += machines.size();
+            }
 
-                if (!machines.get(machineNumber).equals(shuffleFile.getName().substring(hashString.length() + 1,
-                        shuffleFile.getName().indexOf(".txt")))) {
-                    System.err.println("Machine number: " + machineNumber);
-                    System.err.println(machines.get(machineNumber));
-                    System.err.println(shuffleFile.getName().substring(hashString.length(),
-                            shuffleFile.getName().indexOf(".txt")));
-                    throw new IllegalStateException("Wrong machine number");
-                }
+            if (!machines.get(machineNumber).equals(shuffleFile.getName().substring(hashString.length() + 1,
+                    shuffleFile.getName().indexOf(".txt")))) {
+                System.err.println("Machine number: " + machineNumber);
+                System.err.println(machines.get(machineNumber));
+                System.err.println(shuffleFile.getName().substring(hashString.length(),
+                        shuffleFile.getName().indexOf(".txt")));
+                throw new IllegalStateException("Wrong machine number");
+            }
 
-                if (machineNumber == machineId) {
-                    File shuffleReceivedFile = new File(SHUFFLE_RECEIVED_DIRECTORY + File.separator + shuffleFile.getName());
-                    // create shuffle received file
-                    shuffleReceivedFile.createNewFile();
-                    // read all lines of shuffle file
-                    BufferedReader reader = new BufferedReader(new FileReader(shuffleFile));
-                    String line = reader.readLine();
-                    reader.close();
-                    // append the line to the shuffle received file
-                    BufferedWriter writer = new BufferedWriter(new FileWriter(shuffleReceivedFile, true));
-                    writer.write(line);
-                    writer.newLine();
-                    writer.close();
-                } else {
-                    // Read the line of the file
-                    BufferedReader reader = new BufferedReader(new FileReader(shuffleFile));
-                    String line = reader.readLine();
-                    reader.close();
+            if (machineNumber == machineId) {
+                File shuffleReceivedFile = new File(
+                        SHUFFLE_RECEIVED_DIRECTORY + File.separator + shuffleFile.getName());
+                // create shuffle received file
+                shuffleReceivedFile.createNewFile();
+                // read all lines of shuffle file
+                BufferedReader reader = new BufferedReader(new FileReader(shuffleFile));
+                String line = reader.readLine();
+                reader.close();
+                // append the line to the shuffle received file
+                BufferedWriter writer = new BufferedWriter(new FileWriter(shuffleReceivedFile, true));
+                writer.write(line);
+                writer.newLine();
+                writer.close();
+            } else {
+                // Read the line of the file
+                BufferedReader reader = new BufferedReader(new FileReader(shuffleFile));
+                String line = reader.readLine();
+                reader.close();
 
-                    //writerMaster.println("Send: " + machineNumber);
-                    //writerMaster.println(line);
-                    writers[machineNumber].println("ShuffleReceived: " + line);
+                // writerMaster.println("Send: " + machineNumber);
+                // writerMaster.println(line);
+                writers[machineNumber].println("ShuffleReceived: " + line);
 
-                    if (verbose) {
-                        System.out.println("Message sent to machine " + machineNumber + ": " + line);
-                    }
+                if (verbose) {
+                    System.out.println("Message sent to machine " + machineNumber + ": " + line);
                 }
             }
-            for (PrintWriter writer : writers) {
-                if (writer != null) {
-                    writer.println("DONE.");
-                }
+        }
+        for (PrintWriter writer : writers) {
+            if (writer != null) {
+                writer.println("DONE.");
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
@@ -364,9 +371,15 @@ public class SLAVE {
         }
     }
 
-    private void endOfShuffle() {
+    private void endOfShuffleCount() throws IOException {
         System.out.println("End of shuffle");
-        Thread shuffleThread = new Thread(this::sendShuffles);
+        Thread shuffleThread = new Thread(() -> {
+            try {
+                sendShuffles();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
 
         ArrayList<Thread> listenShufflesThreads = new ArrayList<>();
 
@@ -399,19 +412,15 @@ public class SLAVE {
         }
     }
 
-    private synchronized void processShuffleReceived(String shuffleReceived) {
-        try {
-            String key = shuffleReceived.split(", ")[0];
-            String filename = getShuffleFilename(key);
-            File shuffleReceivedFile = new File(SHUFFLE_RECEIVED_DIRECTORY + File.separator + filename);
-            shuffleReceivedFile.createNewFile();
-            BufferedWriter writer = new BufferedWriter(new FileWriter(shuffleReceivedFile, true));
-            writer.write(shuffleReceived);
-            writer.newLine();
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    private synchronized void processShuffleReceived(String shuffleReceived) throws IOException {
+        String key = shuffleReceived.split(", ")[0];
+        String filename = getShuffleFilename(key);
+        File shuffleReceivedFile = new File(SHUFFLE_RECEIVED_DIRECTORY + File.separator + filename);
+        shuffleReceivedFile.createNewFile();
+        BufferedWriter writer = new BufferedWriter(new FileWriter(shuffleReceivedFile, true));
+        writer.write(shuffleReceived);
+        writer.newLine();
+        writer.close();
     }
 
     private String getShuffleFilename(String key) {
@@ -425,53 +434,115 @@ public class SLAVE {
         return hash + "_" + hostname + ".txt";
     }
 
+    private void launchReduceCount() throws FileNotFoundException, IOException {
+        File reduceDirectory = new File(REDUCE_DIRECTORY);
+        reduceDirectory.mkdirs();
 
-    private void launchReduce() {
-        try {
-            File reduceDirectory = new File(REDUCE_DIRECTORY);
-            reduceDirectory.mkdirs();
+        File shuffleReceivedDirectory = new File(SHUFFLE_RECEIVED_DIRECTORY + File.separator);
+        File[] shuffleReceivedFiles = shuffleReceivedDirectory.listFiles();
 
-            File shuffleReceivedDirectory = new File(SHUFFLE_RECEIVED_DIRECTORY + File.separator);
-            File[] shuffleReceivedFiles = shuffleReceivedDirectory.listFiles();
+        HashMap<String, Integer> wordCountMap = new HashMap<>();
 
-            HashMap<String, Integer> wordCountMap = new HashMap<>();
+        assert shuffleReceivedFiles != null;
+        for (File shuffleReceivedFile : shuffleReceivedFiles) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(shuffleReceivedFile))) {
+                String line;
 
-            assert shuffleReceivedFiles != null;
-            for (File shuffleReceivedFile : shuffleReceivedFiles) {
-                try (BufferedReader reader = new BufferedReader(new FileReader(shuffleReceivedFile))) {
-                    String line;
+                while ((line = reader.readLine()) != null) {
+                    String[] keyValue = line.split(", ");
+                    if (keyValue.length == 2) {
+                        String key = keyValue[0];
+                        int value = Integer.parseInt(keyValue[1]);
+                        wordCountMap.merge(key, value, Integer::sum);
+                    }
+                }
+            }
+        }
 
-                    while ((line = reader.readLine()) != null) {
-                        String[] keyValue = line.split(", ");
-                        if (keyValue.length == 2) {
-                            String key = keyValue[0];
-                            int value = Integer.parseInt(keyValue[1]);
-                            wordCountMap.merge(key, value, Integer::sum);
+        for (Entry<String, Integer> entry : wordCountMap.entrySet()) {
+            String key = entry.getKey();
+            int count = entry.getValue();
+            int hash = key.hashCode();
+            String outputFileName = hash + ".txt";
+            String outputFilePath = REDUCE_DIRECTORY + File.separator + outputFileName;
+            File outputFile = new File(outputFilePath);
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
+                writer.write(key + ", " + count);
+                writer.newLine();
+            }
+        }
+
+        System.out.println("Reduce calculation completed");
+
+    }
+
+    private void launchMapSort() throws IOException {
+        // Get all the files in the reduceCount directory
+        File reduceDirectory = new File(REDUCE_DIRECTORY);
+        File[] reduceFiles = reduceDirectory.listFiles();
+
+        assert reduceFiles != null;
+
+        // Make the map sort directory and put the file in it
+        File mapSortDirectory = new File(MAP_SORT_DIRECTORY);
+        mapSortDirectory.mkdirs();
+
+        String outputName = "UMS" + machineId + ".txt";
+        String outputFilePath = MAP_SORT_DIRECTORY + File.separator + outputName;
+        File outputFile = new File(outputFilePath);
+
+        outputFile.createNewFile();
+
+        HashMap<Integer, String> wordSortMap = new HashMap<>();
+
+        for (File file : reduceFiles) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String[] keyValue = line.split(", ");
+                    if (keyValue.length == 2) {
+                        String key = keyValue[0];
+                        int value = Integer.parseInt(keyValue[1]);
+                        if (wordSortMap.containsKey(value)) {
+                            String word = wordSortMap.get(value);
+                            word += ", " + key;
+                            wordSortMap.put(value, word);
+                        } else {
+                            wordSortMap.put(value, key);
                         }
                     }
                 }
             }
-
-            for (Entry<String, Integer> entry : wordCountMap.entrySet()) {
-                String key = entry.getKey();
-                int count = entry.getValue();
-                int hash = key.hashCode();
-                String outputFileName = hash + ".txt";
-                String outputFilePath = REDUCE_DIRECTORY + File.separator + outputFileName;
-                File outputFile = new File(outputFilePath);
-                try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
-                    writer.write(key + ", " + count);
-                    writer.newLine();
-                }
-            }
-
-            System.out.println("Reduce calculation completed");
-
-        } catch (IOException e) {
-            e.printStackTrace();
         }
+
+        minCount = Collections.min(wordSortMap.keySet());
+        maxCount = Collections.max(wordSortMap.keySet());
+
+        PrintWriter writer = new PrintWriter(outputFile);
+        for (Entry<Integer, String> entry : wordSortMap.entrySet()) {
+            int key = entry.getKey();
+            String value = entry.getValue();
+            writer.println(key + ", <" + value + ">");
+        }
+
+        writer.close();
+
     }
 
+    private void launchShuffleSort() throws NumberFormatException, IOException {
+        writerMaster.println("ShuffleSort: " + minCount + ", " + maxCount);
+
+        String line;
+        while ((line = readerMaster.readLine()) != null) {
+            if (line.startsWith("ShuffleSort: ")) {
+                String[] minMax = line.split(": ")[1].split(", ");
+                minCount = Integer.parseInt(minMax[0]);
+                maxCount = Integer.parseInt(minMax[1]);
+                break;
+            }
+        }
+
+    }
 
     private void launchResult() {
         File reduceDirectory = new File(REDUCE_DIRECTORY);
@@ -489,10 +560,8 @@ public class SLAVE {
         }
     }
 
-
     private void getMachines(File machinesFile) {
         try {
-
             BufferedReader reader = new BufferedReader(new FileReader(machinesFile));
             String line;
             int machineNumber = 0;
