@@ -29,6 +29,11 @@ public class CLEAN {
                 String machine = String.format("%s@%s", USERNAME, ipAddress);
 
                 try {
+
+                    if (machineNumber != 0 && machineNumber % 10 == 0) {
+                        Thread.sleep(60000);
+                    }
+
                     // Construire la commande SSH pour supprimer le répertoire distant
                     String command = String.format("ssh %s rm -rf %s", machine, REMOTE_DIR);
 
@@ -44,9 +49,6 @@ public class CLEAN {
                         showErrorMessage("Erreur lors de la suppression du répertoire sur la machine " + machineNumber + ": " + ipAddress, process);
                     }
 
-                    if (machineNumber != 0 && machineNumber % 5 == 0) {
-                        Thread.sleep(60000);
-                    }
                 } catch (IOException | InterruptedException e) {
                     e.printStackTrace();
                 }

@@ -211,7 +211,7 @@ Enfin, le programme java ``MASTER`` permet de lancer le programme MapReduce.
 
 > Il est possible de lancer directement les programmes ``SLAVE`` depuis le ``DEPLOY`` en activant le booléen ``autoLaunch`` dans le code. Cependant, cela ne permet pas de voir ce qu'il se passe sur la machine et ne pas pouvoir l'arrêter si elle plante.
 > C'est pourquoi je préfère ouvrir un terminal pour chaque machine et lancer le programme ``SLAVE`` manuellement.
-> Pour palier à cela, il serait possible de créer un programme qui utilise la méthode ``kill`` afin de tuer les sockets non fermés et de mettre des logs au lieu de printer dans la machine.
+> Pour palier à cela, j'ai fait un script bash dans ``utils`` qui permet de killer tous les processus ouvert sur le port 8888 (port utilisé pour les sockets) de chaque machine.
 
 Pour tester tous les résultats, il faut lancer le programme ``TEST`` qui va comparer les résultats obtenus avec les résultats attendus. Cela peut être extrêmement long et à ne pas utiliser pour les gros fichiers !!
 
@@ -243,10 +243,10 @@ J'ai aussi fait un mode pour l'analyse de gros fichiers, pour cela, il faut :
 > Tous les temps sont en secondes.
 
 | Nombres de machines | Temps Connexion | Temps Map | Temps Shuffle | Temps Reduce | Temps Tot |
-|---------------------|----------------|-----------|--------------|--------------|-----------|
-| 3                   | 0              | 13        | 587          | 468          | 1070       |
-| 5                   | 1              | 55         | 7            | 2            | 126       |
-| 10                  | 1              |           |              |              |           |
-| 15                  | 1              |           |              |              |           |
-| 20                  |                |           |              |              |           |
-| 30                  |                |           |              |              |           |
+|---------------------|-----------------|-----------|---------------|--------------|-----------|
+| 3                   | 0.035           | 0.393     | 2.715         | 1.615        | 8.294     |
+| 5                   | 0.043           | 3.563     | 1.997         | 1.069        | 6.674     |
+| 10                  | 0.303           | 3.713     | 1.893         | 1.175        | 7.089     |
+| 15                  | 1               |           |               |              |           |
+| 20                  |                 |           |               |              |           |
+| 30                  |                 |           |               |              |           |

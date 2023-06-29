@@ -78,7 +78,7 @@ public class MASTER {
         long endTime2 = System.currentTimeMillis();
         System.out.println("MAP COUNT FINISHED");
 
-        System.out.println("Temps de map count : " + (endTime2 - startTime2) / 100 + "s");
+        System.out.println("Temps de map count : " + (endTime2 - startTime2) / 1000. + "s");
 
 
         // Lancer la phase de shuffle sur les machines
@@ -89,7 +89,7 @@ public class MASTER {
         long endTime3 = System.currentTimeMillis();
         System.out.println("SHUFFLE COUNT FINISHED");
 
-        System.out.println("Temps de shuffle count : " + (endTime3 - startTime3) / 100 + "s");
+        System.out.println("Temps de shuffle count : " + (endTime3 - startTime3) / 1000. + "s");
 
         // Lancer la phase reduce sur les machines
         long startTime4 = System.currentTimeMillis();
@@ -99,7 +99,7 @@ public class MASTER {
         long endTime4 = System.currentTimeMillis();
         System.out.println("REDUCE COUNT FINISHED");
 
-        System.out.println("Temps de reduce count : " + (endTime4 - startTime4) / 100 + "s");
+        System.out.println("Temps de reduce count : " + (endTime4 - startTime4) / 1000. + "s");
 
         if (sorting) {
 
@@ -109,7 +109,7 @@ public class MASTER {
         // TODO waitForCommand();
         // TODO long endTime5 = System.currentTimeMillis();
 
-        // TODO System.out.println("Temps de map sort : " + (endTime5 - startTime5) / 100 + "s");
+        // TODO System.out.println("Temps de map sort : " + (endTime5 - startTime5) / 1000. + "s");
 
         // TODO // Lancer la phase shuffle sur les machines
         // TODO long startTime6 = System.currentTimeMillis();
@@ -118,7 +118,7 @@ public class MASTER {
         // TODO waitForCommand();
         // TODO long endTime6 = System.currentTimeMillis();
 
-        // TODO System.out.println("Temps de shuffle sort : " + (endTime6 - startTime6) / 100 + "s");
+        // TODO System.out.println("Temps de shuffle sort : " + (endTime6 - startTime6) / 1000. + "s");
 
         // TODO // Lancer la phase reduce sur les machines
         // TODO long startTime7 = System.currentTimeMillis();
@@ -127,7 +127,7 @@ public class MASTER {
         // TODO waitForCommand();
         // TODO long endTime7 = System.currentTimeMillis();
 
-        // TODO System.out.println("Temps de reduce sort : " + (endTime7 - startTime7) / 100 + "s");
+        // TODO System.out.println("Temps de reduce sort : " + (endTime7 - startTime7) / 1000. + "s");
         }
 
         if (isTest) {
@@ -145,7 +145,7 @@ public class MASTER {
 
         // Calcul du temps total
         long endTime8 = System.currentTimeMillis();
-        System.out.println("Temps total : " + (endTime8 - startTime) / 100 + "s");
+        System.out.println("Temps total : " + (endTime8 - startTime) / 1000. + "s");
 
     }
 

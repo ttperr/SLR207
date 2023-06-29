@@ -18,7 +18,7 @@ read -ra machines <<< "$tmp"
 # shellcheck disable=SC2207
 shuffled_machines=($(shuf -e "${machines[@]}"))
 
-working_count=1
+working_count=0
 
 # shellcheck disable=SC2188
 > "../data/machines.txt"
@@ -27,7 +27,7 @@ for machine in "${shuffled_machines[@]}"; do
   ssh -q -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=3 $login@"$machine" "exit"
   # shellcheck disable=SC2181
   [[ $? -eq 0 ]] && echo "$machine" >> "../data/machines.txt" && ((working_count++))
-  [[ $working_count -eq $1 ]] && break
+  [[ $working_count -eq $5 ]] && break
 done
 
 rm index.html

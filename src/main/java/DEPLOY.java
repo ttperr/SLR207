@@ -146,6 +146,10 @@ public class DEPLOY {
 
                 try {
 
+                    if (machineNumber != 0 && machineNumber % 5 == 0) {
+                        Thread.sleep(60000);
+                    }
+
                     if (isTest) {
                         // Copie du split dans le dossier ".REMOTE_DIR"
                         ProcessBuilder moveSplitToDir = new ProcessBuilder("cp",
@@ -194,9 +198,7 @@ public class DEPLOY {
                                 "Programme lancé sur la machine " + machineNumber + ": " + ipAddress + "\n");
                     }
 
-                    if (machineNumber != 0 && machineNumber % 5 == 0) {
-                        Thread.sleep(60000);
-                    }
+
                 } catch (IOException | InterruptedException e) {
                     e.printStackTrace();
                 }
