@@ -31,6 +31,7 @@ public class CLEAN {
                 try {
 
                     if (machineNumber != 0 && machineNumber % 10 == 0) {
+                        System.out.println("\nWait 1 minutes because of ssh...\n");
                         Thread.sleep(60000);
                     }
 

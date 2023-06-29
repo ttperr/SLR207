@@ -26,7 +26,7 @@ public class DEPLOY {
     public static final String TEXT_DIR = "text";
     public static final String TEXT_FILE = TEXT_DIR + File.separator + MASTER.TEXT_NAME;
 
-    public static final boolean isTest = false;
+    public static final boolean isTest = true;
     private static final boolean autoLaunch = true;
 
     public static void main(String[] args) {
@@ -147,6 +147,7 @@ public class DEPLOY {
                 try {
 
                     if (machineNumber != 0 && machineNumber % 5 == 0) {
+                        System.out.println("Sleep de 1 minute à cause de ssh...\n");
                         Thread.sleep(60000);
                     }
 
@@ -191,9 +192,11 @@ public class DEPLOY {
 
                     if (autoLaunch) {
                         // Lancement du programme sur la machine distante
-                        ProcessBuilder sshPb = new ProcessBuilder("ssh", machine, "java", "-jar",
+                        ProcessBuilder sshPb = new ProcessBuilder("ssh", machine, "fuser", "-k", "8888/tcp", ";", "java", "-jar",
                                 REMOTE_DIR + File.separator + SLAVE_JAR);
                         sshPb.start();
+
+
                         System.out.println(
                                 "Programme lancé sur la machine " + machineNumber + ": " + ipAddress + "\n");
                     }

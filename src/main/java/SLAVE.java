@@ -41,7 +41,7 @@ public class SLAVE {
 
     private static final double linesToAnalyze = 100000;
     private double linesPerMachine ;
-    public static final boolean isTest = false;
+    public static final boolean isTest = true;
     public static final boolean verbose = false;
 
     public static void main(String[] args) throws NumberFormatException, InterruptedException, IOException {

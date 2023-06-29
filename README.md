@@ -209,13 +209,18 @@ Pour lancer le programme, il faut lancer le programme java ``CLEAN`` afin de sup
 Puis, il faut lancer le programme java ``DEPLOY`` qui permet d'envoyer des fichiers sur les machines (le code ``SLAVE``, le fichier machines.txt, ainsi que des splits créés par ce même programme, lorsque le programme est en mode test)
 Enfin, le programme java ``MASTER`` permet de lancer le programme MapReduce.
 
-> Il est possible de lancer directement les programmes ``SLAVE`` depuis le ``DEPLOY`` en activant le booléen ``autoLaunch`` dans le code. Cependant, cela ne permet pas de voir ce qu'il se passe sur la machine et ne pas pouvoir l'arrêter si elle plante.
-> C'est pourquoi je préfère ouvrir un terminal pour chaque machine et lancer le programme ``SLAVE`` manuellement.
-> Pour palier à cela, j'ai fait un script bash dans ``utils`` qui permet de killer tous les processus ouvert sur le port 8888 (port utilisé pour les sockets) de chaque machine.
+> Il est possible de lancer directement les programmes ``SLAVE`` depuis le ``DEPLOY`` en activant le booléen ``autoLaunch`` dans le code. Même si nous ne verrons pas ce qu'il s'est passé exactement sur machine.
+> Cependant, étant donné que le deploy kill tout processus ouvert sur le port 8888 avant de lancer les slaves, cela fonctionne bien.
 
 Pour tester tous les résultats, il faut lancer le programme ``TEST`` qui va comparer les résultats obtenus avec les résultats attendus. Cela peut être extrêmement long et à ne pas utiliser pour les gros fichiers !!
 
 ### Configurations
+
+Pour obtenir des machines, il faut exécuter le script bash suivant :
+
+```bash
+$ bash ./utils/getMachines.sh <nbMachines>
+```
 
 Ici, il y a plusieurs booléens à écrire afin d'obtenir les meilleurs résultats
 
@@ -243,10 +248,20 @@ J'ai aussi fait un mode pour l'analyse de gros fichiers, pour cela, il faut :
 > Tous les temps sont en secondes.
 
 | Nombres de machines | Temps Connexion | Temps Map | Temps Shuffle | Temps Reduce | Temps Tot |
-|---------------------|-----------------|-----------|---------------|--------------|-----------|
-| 3                   | 0.035           | 0.393     | 2.715         | 1.615        | 8.294     |
-| 5                   | 0.043           | 3.563     | 1.997         | 1.069        | 6.674     |
-| 10                  | 0.303           | 3.713     | 1.893         | 1.175        | 7.089     |
-| 15                  | 1               |           |               |              |           |
-| 20                  |                 |           |               |              |           |
-| 30                  |                 |           |               |              |           |
+|:-------------------:|:---------------:|:---------:|:-------------:|:------------:|:---------:|
+|          3          |      0.04       |   3.876   |     3.976     |    2.272     |  10.174   |
+|          5          |      0.077      |   3.871   |     4.569     |    2.536     |  11.062   |
+|         10          |      0.095      |   4.064   |     2.059     |    0.997     |   7.228   |
+|         15          |      0.373      |   4.193   |     1.131     |    0.461     |   6.173   |
+|         30          |      0.472      |   4.302   |     0.882     |    0.302     |   5.998   |
+
+### Plot des résultats
+
+![plot](./data/plot.png)
+
+## Conclusion
+
+Pour conclure, j'ai réussi à implémenter l'algorithme MapReduce pour compte le nombre d'occurrences de mots dans un document à l'aide de sockets.
+On peut voir évidemment que plus le nombre de machines est important, plus la connection est longue, mais plus vite l'algorithme tourne.
+Par ailleurs, multiplier le nombre de machines par 10 divise par 2 le temps de travail !
+Pour la partie ``sort`` j'ai commencé, mais je n'ai pas pu finir, ainsi, vous pourrez voir une partie des fonctions présente dans le code.
