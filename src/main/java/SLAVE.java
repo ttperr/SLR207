@@ -18,7 +18,6 @@ public class SLAVE {
 
     private static final String MAP_SORT_DIRECTORY = HOME_DIRECTORY + "/mapsSort";
     private static final String SHUFFLE_SORT_DIRECTORY = HOME_DIRECTORY + "/shufflesSort";
-    private static final String SHUFFLE_RECEIVED_SORT_DIRECTORY = HOME_DIRECTORY + "/shufflesreceivedSort";
     private static final String REDUCE_SORT_DIRECTORY = HOME_DIRECTORY + "/reducesSort";
 
     private static final String MACHINES_FILE = HOME_DIRECTORY + "/machines.txt";
@@ -37,11 +36,13 @@ public class SLAVE {
     private BufferedReader readerMaster;
     private PrintWriter writerMaster;
 
-    private int minCount;
-    private int maxCount;
+    private int start;
+    private int size;
 
-    public static final boolean isTest = true;
-    public static final boolean verbose = true;
+    private static final double linesToAnalyze = 100000;
+    private double linesPerMachine ;
+    public static final boolean isTest = false;
+    public static final boolean verbose = false;
 
     public static void main(String[] args) throws NumberFormatException, InterruptedException, IOException {
         new SLAVE();
@@ -55,6 +56,8 @@ public class SLAVE {
         socketsInput = new Socket[machines.size()];
         writers = new PrintWriter[machines.size()];
         readers = new BufferedReader[machines.size()];
+
+        linesPerMachine = linesToAnalyze / machines.size();
 
         try {
             serverSocket = new ServerSocket(PORT);
@@ -84,7 +87,7 @@ public class SLAVE {
                         String inputFile = line.split(" ")[1];
                         launchMapCount(inputFile, 0, Double.POSITIVE_INFINITY);
                     } else {
-                        launchMapCountOnBigFile(BIG_FILE_TO_PROCESS);
+                        launchMapCountOnBigFile();
                     }
 
                     sayDoneToMaster();
@@ -105,12 +108,12 @@ public class SLAVE {
                     sayDoneToMaster();
 
                 } else if (line.equals("launchShuffleSort")) {
-                    // TODO launchShuffleSort();
-                    // TODO endOfShuffleSort();
+                    launchShuffleSort();
+                    endOfShuffleSort();
                     sayDoneToMaster();
 
                 } else if (line.equals("launchReduceSort")) {
-                    // TODO launchReduceSort();
+                    launchReduceSort();
                     sayDoneToMaster();
 
                 } else if (line.startsWith("launchResult")) {
@@ -220,6 +223,7 @@ public class SLAVE {
                     }
                 }
             }
+            lineRead++;
         }
 
         reader.close();
@@ -236,8 +240,7 @@ public class SLAVE {
 
         for (String word : wordCountMap.keySet()) {
             int count = wordCountMap.get(word);
-            writer.write(word + ", " + count);
-            writer.newLine();
+            writer.write(word + ", " + count + "\n");
         }
 
         writer.close();
@@ -245,19 +248,24 @@ public class SLAVE {
         System.out.println("Map calculation completed for file " + inputFile);
     }
 
-    private void launchMapCountOnBigFile(String inputFile) {
+    private void launchMapCountOnBigFile() {
         // Cut the file in machines.size() parts.
 
         try {
-            LineNumberReader reader = new LineNumberReader(new FileReader(inputFile));
-            reader.skip(Long.MAX_VALUE);
-            double lines = reader.getLineNumber();
-            reader.close();
-            System.out.println("Lines: " + lines);
-            double linesPerMachine = lines / machines.size();
-            linesPerMachine = 1; // TODO: remove this line.
 
-            launchMapCount(inputFile, machineId * linesPerMachine, (machineId + 1) * linesPerMachine);
+            if (linesPerMachine == -1) {
+                BufferedReader reader = new BufferedReader(new FileReader(SLAVE.BIG_FILE_TO_PROCESS));
+                double lines = 0;
+                while (reader.readLine() != null) {
+                    lines++;
+                }
+                reader.close();
+                System.out.println("Lines: " + lines);
+                linesPerMachine = lines / machines.size();
+            }
+
+            System.out.println("Lines per machine: " + linesPerMachine);
+            launchMapCount(SLAVE.BIG_FILE_TO_PROCESS, machineId * linesPerMachine, linesPerMachine);
 
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -280,8 +288,7 @@ public class SLAVE {
                 String outputFilePath = SHUFFLE_DIRECTORY + File.separator + outputFileName;
                 File outputFile = new File(outputFilePath);
                 BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
-                writer.write(key + ", " + value);
-                writer.newLine();
+                writer.write(key + ", " + value + "\n");
                 writer.close();
             }
         }
@@ -292,7 +299,7 @@ public class SLAVE {
 
     }
 
-    private synchronized void sendShuffles() throws IOException {
+    private void sendShufflesCount() throws IOException {
         File shuffleReceivedDirectory = new File(SHUFFLE_RECEIVED_DIRECTORY);
         shuffleReceivedDirectory.mkdirs();
         File shuffleDirectory = new File(SHUFFLE_DIRECTORY);
@@ -327,8 +334,7 @@ public class SLAVE {
                 reader.close();
                 // append the line to the shuffle received file
                 BufferedWriter writer = new BufferedWriter(new FileWriter(shuffleReceivedFile, true));
-                writer.write(line);
-                writer.newLine();
+                writer.write(line + "\n");
                 writer.close();
             } else {
                 // Read the line of the file
@@ -377,7 +383,7 @@ public class SLAVE {
         System.out.println("End of shuffle");
         Thread shuffleThread = new Thread(() -> {
             try {
-                sendShuffles();
+                sendShufflesCount();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -414,14 +420,15 @@ public class SLAVE {
         }
     }
 
-    private synchronized void processShuffleReceived(String shuffleReceived) throws IOException {
+    private void processShuffleReceived(String shuffleReceived) throws IOException {
         String key = shuffleReceived.split(", ")[0];
         String filename = getShuffleFilename(key);
+        File shuffleReceivedDirectory = new File(SHUFFLE_RECEIVED_DIRECTORY);
+        shuffleReceivedDirectory.mkdirs();
         File shuffleReceivedFile = new File(SHUFFLE_RECEIVED_DIRECTORY + File.separator + filename);
         shuffleReceivedFile.createNewFile();
         BufferedWriter writer = new BufferedWriter(new FileWriter(shuffleReceivedFile, true));
-        writer.write(shuffleReceived);
-        writer.newLine();
+        writer.write(shuffleReceived + "\n");
         writer.close();
     }
 
@@ -469,8 +476,7 @@ public class SLAVE {
             String outputFilePath = REDUCE_DIRECTORY + File.separator + outputFileName;
             File outputFile = new File(outputFilePath);
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
-                writer.write(key + ", " + count);
-                writer.newLine();
+                writer.write(key + ", " + count + "\n");
             }
         }
 
@@ -517,8 +523,8 @@ public class SLAVE {
             }
         }
 
-        minCount = Collections.min(wordSortMap.keySet());
-        maxCount = Collections.max(wordSortMap.keySet());
+        start = Collections.min(wordSortMap.keySet());
+        size = Collections.max(wordSortMap.keySet());
 
         PrintWriter writer = new PrintWriter(outputFile);
         for (Entry<Integer, String> entry : wordSortMap.entrySet()) {
@@ -532,22 +538,60 @@ public class SLAVE {
     }
 
     private void launchShuffleSort() throws NumberFormatException, IOException {
-        writerMaster.println("ShuffleSort: " + minCount + ", " + maxCount);
+        writerMaster.println("ShuffleSort: " + start + ", " + size);
 
         String line;
         while ((line = readerMaster.readLine()) != null) {
             if (line.startsWith("ShuffleSort: ")) {
-                String[] minMax = line.split(": ")[1].split(", ");
-                minCount = Integer.parseInt(minMax[0]);
-                maxCount = Integer.parseInt(minMax[1]);
+                // Get the start and the size
+                String[] startPath = line.split(": ")[1].split(", ");
+                start = Integer.parseInt(startPath[0]);
+                size = Integer.parseInt(startPath[1]);
                 break;
             }
         }
 
     }
 
+    private void sendShufflesSort() throws IOException {
+        // Load map sort file
+        String mapSortFile = MAP_SORT_DIRECTORY + File.separator + "UMS" + machineId + ".txt";
+        File file = new File(mapSortFile);
+
+        BufferedReader reader = new BufferedReader(new FileReader(file));
+
+        String line;
+        while ((line = reader.readLine()) != null) {
+            String[] keyValue = line.split(", ");
+            if (keyValue.length == 2) {
+                int key = Integer.parseInt(keyValue[0]);
+                int machine = machineSendSort(key, size);
+                if (machine != machineId) {
+                    writers[machine].println("ShuffleReceivedSort: " + line);
+                } else {
+                    // Copy the file to the shuffle directory
+                    String shuffleFilename = "UMS" + machineId + ".txt";
+                    String shuffleFilePath = SHUFFLE_DIRECTORY + File.separator + shuffleFilename;
+
+                    File shuffleFile = new File(shuffleFilePath);
+                    shuffleFile.createNewFile();
+
+                    try (BufferedWriter writer = new BufferedWriter(new FileWriter(shuffleFile))) {
+                        writer.write(line + "\n");
+                    }
+
+                }
+            }
+        }
+
+    }
+
     private void endOfShuffleSort() throws IOException {
-        
+        // TODO
+    }
+
+    private void launchReduceSort() throws IOException {
+        // TODO
     }
 
     private void launchResult() {
@@ -584,4 +628,11 @@ public class SLAVE {
         }
     }
 
+    private int machineSendSort(int number, int size) {
+        int machineNumber = number / size;
+        if (machineNumber < 0) {
+            machineNumber += machines.size();
+        }
+        return machineNumber;
+    }
 }

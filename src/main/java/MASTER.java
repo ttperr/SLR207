@@ -20,6 +20,7 @@ public class MASTER {
     public static final String MACHINES_FILE = "data/machines.txt";
 
     public static final boolean isTest = DEPLOY.isTest;
+    public static final boolean sorting = false;
 
 
     private final List<ServerHandler> servers = new ArrayList<>(); // Liste des clients connectés
@@ -67,7 +68,7 @@ public class MASTER {
         long endTime = System.currentTimeMillis();
         System.out.println("FULL DISTRIBUTED SERVER CREATED");
 
-        System.out.println("Temps de connexion : " + (endTime - startTime) / 100 + "s");
+        System.out.println("Temps de connexion : " + (endTime - startTime) / 1000. + "s");
 
         // Lancer la phase de map sur les machines
         long startTime2 = System.currentTimeMillis();
@@ -100,11 +101,13 @@ public class MASTER {
 
         System.out.println("Temps de reduce count : " + (endTime4 - startTime4) / 100 + "s");
 
-        long startTime5 = System.currentTimeMillis();
-        runMapSortPhase();
-        // Attendre que tous les SLAVES se terminent
-        waitForCommand();
-        long endTime5 = System.currentTimeMillis();
+        if (sorting) {
+
+        // TODO long startTime5 = System.currentTimeMillis();
+        // TODO runMapSortPhase();
+        // TODO // Attendre que tous les SLAVES se terminent
+        // TODO waitForCommand();
+        // TODO long endTime5 = System.currentTimeMillis();
 
         // TODO System.out.println("Temps de map sort : " + (endTime5 - startTime5) / 100 + "s");
 
@@ -125,7 +128,7 @@ public class MASTER {
         // TODO long endTime7 = System.currentTimeMillis();
 
         // TODO System.out.println("Temps de reduce sort : " + (endTime7 - startTime7) / 100 + "s");
-
+        }
 
         if (isTest) {
             // Copier les fichiers de reduce vers la machine locale

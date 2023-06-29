@@ -2,7 +2,16 @@
 
 > Rapport du projet SLR207 à Télécom Paris - **Tristan Perrot**
 
-## Étape 1
+Ce rapport permet de retracer tout mon travail effectué pour le projet SLR207. Il est découpé en plusieurs parties.
+En premier temps, il y a la partie étape par étape en suivant le site web donnant les différentes instructions.
+Ensuite, j'explique comment j'ai implémenté et comme lancer le code final.
+Enfin, je fais une petite synthèse des résultats.
+
+## Étape par étape
+
+> Le travail suivant retrace les différentes étapes de programmation, les codes sources sont disponibles dans le dossier ``archive``.
+
+### Étape 1
 
 J'ai donc implémenté un logiciel en java qui compte le nombre d’occurrences des mots d’un fichier d’entrée de manière
 non parallélisée. La structure de donnée la plus adaptée est l'**HashMap** car cela permet d'enregistrer des clefs
@@ -35,7 +44,7 @@ associées à des valeurs (ici les mots associés à leur occurrence).
   * Durée de comptage : 5.271s
   * Durée de tri et d'affichage des 50 premiers mots : 6.809s
 
-## Étape 2
+### Étape 2
 
 Pour l'étape 2, j'ai utilisé l'ordinateur **tp-1a201-12** (tp-1a201-12.enst.fr).
 Pour trouver son nom à l'aide d'une commande, il faut écrire :
@@ -68,7 +77,7 @@ host <adresse IP>
 
 Les appels à la fonction ping avec comme argument le court nom, le nom long ou bien l'adresse IP fonctionnent très bien.
 
-Pour lancer un calcul en ligne de commande, il est possible de faire comme cela:
+Pour lancer un calcul en ligne de commande, il est possible de faire comme cela :
 
 ```bash
 echo $((2 + 3))
@@ -91,7 +100,7 @@ distant. Pour cela, il faut utiliser la commande :
 ssh-copy-id tperrot-21@<nom de l ordinateur>
 ```
 
-## Étape 3
+### Étape 3
 
 Pour connaître le chemin absolu de mon répertoire personnel, il faut utiliser la commande :
 
@@ -127,7 +136,7 @@ Cependant, pour, à partir de A, transférer le fichier de B (depuis /tmp/tperro
 scp tperrot-21@<nom de l ordinateur>:/tmp/tperrot-21/local.txt <nom de l ordinateur>:/tmp/tperrot-21/local.txt
 ```
 
-## Étape 4
+### Étape 4
 
 Pour exécuter à distance (depuis A sur la machine B) le slave.jar, il faut utiliser la commande :
 
@@ -135,28 +144,28 @@ Pour exécuter à distance (depuis A sur la machine B) le slave.jar, il faut uti
 ssh tperrot-21@<nom de l ordinateur> 'java -jar /tmp/tperrot-21/slave.jar'
 ```
 
-## Étape 6
+### Étape 6
 
 Lors de mon étape 6, étant donné le TimeOut d'attente de sortie standard et de sortie d'erreur. Le TimeOut peut-être 2
 fois supérieur, car le programme va "attendre" une erreur même si la sortie standard fonctionne bien et n'est pas
 terminée.
 
-## Étape 7
+### Étape 7
 
 Le programme ``DEPLOY`` lance les connexions de manière séquentielle. Pour attendre que le mkdir termine correctement,
 j'utilise la fonction ``waitFor``.
 De même, le programme lance les copies de manière séquentielle.
 
-## Étape 8
+### Étape 8
 
 Le programme ``CLEAN`` lance les commandes d'effacement de manière séquentielle.
 
-## Étape 10
+### Étape 10
 
 Lors de la création des dossiers, je récupère le code de sortie afin de vérifier la bonne création. L'envoie des copies
 est séquentielle. Mais la phase de map ne l'est pas.
 
-## Étape 11 - 12 - 13
+### Étape 11 - 12 - 13
 
 À la fin de l'étape 11, je me suis rendu compte que malgré la facilité de passer par ssh, il fallait que toutes les
 machines se connaissent entre elles, ce qui pouvait être très long sachant que nous sommes aussi limités par le nombre
@@ -169,23 +178,75 @@ J'ai donc créé un serveur (le master) et les clients en socket sauf que j'util
 shuffle. Ce qui ne fonctionnait pas....
 
 J'ai donc récréé un dossier pour repartir avec mes machines qui deviennent des serveurs et le master un client de tous
-les serveurs. Après de longue réflexion de comment gérer tout cela j'ai enfin réussi !
+les serveurs. Après de longue réflexion de comment gérer tout cela, j'ai enfin réussi !
 
 > **stepByStep, serv_ssh, serv_v0 directories are deprecated and will certainly not work**
 
-## Idée pour les sockets
+## Le code
 
-* DEPLOY : Envoi du slave.jar et du machines.txt (en créant le dossier sur l'ordinateur master comme ça il n'y a besoin que d'un seul scp)
-* SLAVE : Plusieurs mode mais le mode 10 est l'initialisation des sockets. Ainsi, il faut que chaque machine crée un socket serveur et attende une connexion. Ensuite, quitte à utiliser la fonction ``isServerSocketOpen(String host, int port)``, le master envoie une demande de connexion en temps que client à chaque machine et récupère ainsi une liste de serveur. Ensuite, il dit à chaque serveur de se connecter à tous les autres serveurs (par message socket). Ainsi, chaque serveur est connecté à tous les autres serveurs.
+### Idée pour les sockets
 
-## Idée finale
+> Ici, je mets un léger paragraphe concernant une idée que j'ai eue, mais qui a été vite abandonnée
+
+* DEPLOY : Envoi du slave.jar et du fichier machines.txt (en créant le dossier sur l'ordinateur master comme ça il n'y a besoin que d'un seul scp)
+* SLAVE : Plusieurs modes, mais le mode 10 est l'initialisation des sockets. Ainsi, il faut que chaque machine crée un socket serveur et attende une connexion. Ensuite, quitte à utiliser la fonction ``isServerSocketOpen(String host, int port)``, le master envoie une demande de connexion en tant que client à chaque machine et récupère ainsi une liste de serveur. Ensuite, il dit à chaque serveur de se connecter à tous les autres serveurs (par message socket). Ainsi, chaque serveur est connecté à tous les autres serveurs.
+
+### Idée finale
 
 Finalement cela ne marche mais, du coup, j'ai trouvé un moyen et cela marche.
 
 Chaque machine est un serveur et le master est un client de tous les serveurs. Ainsi, le master peut envoyer des messages à tous les serveurs et les serveurs peuvent envoyer des messages au master. Il n'y a plus de mode et ainsi les requêtes sont envoyées dans le sens ou chaque SLAVE doit effectuer une fonction.
 
-Cependant, lors de la phase shuffle, les mots ""repassent"" par le master ce qui peut être un peu lourd en terme de nombre de messages. Pour éviter tout blocage j'ai du créer un thread lors de la phase shuffle pour envoyer et recevoir les messages en même temps.
+Cependant, lors de la phase shuffle, les mots ""repassent"" par le master ce qui peut être un peu lourd en termes de nombre de messages. Pour éviter tout blocage, j'ai dû créer un thread lors de la phase shuffle pour envoyer et recevoir les messages en même temps.
 
-## Procédure de lancement
+Or, dans ma dernière version, j'ai réussi à coder un réseau complet de machines qui communiquent par **socket**. Ainsi, toutes les machines (lors de la phase shuffle) peuvent communiquer entre elles par le biais de socket.
+Pour cela, il fallait vraiment faire attention à bien utiliser des **threads** et des fonctions ``synchronized`` pour ne pas bloquer le programme.
 
-Pour lancer le programme, il faut lancer le programme java ``CLEAN``. Puis le programme java ``DEPLOY``. Puis enfin le programme java ``MASTER``.
+
+### Procédure de lancement
+
+Pour lancer le programme, il faut lancer le programme java ``CLEAN`` afin de supprimer les dossiers temporaires.
+Puis, il faut lancer le programme java ``DEPLOY`` qui permet d'envoyer des fichiers sur les machines (le code ``SLAVE``, le fichier machines.txt, ainsi que des splits créés par ce même programme, lorsque le programme est en mode test)
+Enfin, le programme java ``MASTER`` permet de lancer le programme MapReduce.
+
+> Il est possible de lancer directement les programmes ``SLAVE`` depuis le ``DEPLOY`` en activant le booléen ``autoLaunch`` dans le code. Cependant, cela ne permet pas de voir ce qu'il se passe sur la machine et ne pas pouvoir l'arrêter si elle plante.
+> C'est pourquoi je préfère ouvrir un terminal pour chaque machine et lancer le programme ``SLAVE`` manuellement.
+> Pour palier à cela, il serait possible de créer un programme qui utilise la méthode ``kill`` afin de tuer les sockets non fermés et de mettre des logs au lieu de printer dans la machine.
+
+Pour tester tous les résultats, il faut lancer le programme ``TEST`` qui va comparer les résultats obtenus avec les résultats attendus. Cela peut être extrêmement long et à ne pas utiliser pour les gros fichiers !!
+
+### Configurations
+
+Ici, il y a plusieurs booléens à écrire afin d'obtenir les meilleurs résultats
+
+* ``DEPLOY.autoLaunch`` : Permet de lancer automatiquement les programmes ``SLAVE`` depuis le programme ``DEPLOY``. Cependant, cela ne permet pas de voir ce qu'il se passe sur la machine et ne pas pouvoir l'arrêter si elle plante.
+  * Ici en mode ``true``. 
+  * **Attention**, s'il est en mode ``false`` il faut lancer les ``SLAVE`` manuellement avec cette commande : ``java -jar /tmp/tperrot-21/SLAVE.jar``.
+* ``isTest`` : Présent dans ``DEPLOY`` et ``SLAVE``, cela permet de dire que ce sont les fichiers textes présents sur la machine qui vont être utilisés.
+  * Ici en mode ``true``.
+* ``SLAVE.verbose`` : Permet d'afficher les messages de la machine.
+  * Ici en mode ``false`` pour optimiser les résultats
+
+J'ai aussi fait un mode pour l'analyse de gros fichiers, pour cela, il faut :
+
+* ``isTest`` : ``false``
+* ``SLAVE.BIG_FILE_TO_PROCESS`` : Le chemin du fichier à analyser.
+* ``SLAVE.linesPerMachine`` : Le nombre de lignes à analyser par machine.
+* ``SLAVE.verbose`` : ``false`` pour gagner en temps.
+
+> Cela est assez long et ne marche pas extrêmement bien
+
+## Résultats
+
+### Pour 100000 lignes du ``"/cal/commoncrawl/CC-MAIN-20230320083513-20230320113513-00000.warc.wet"``
+
+> Tous les temps sont en secondes.
+
+| Nombres de machines | Temps Connexion | Temps Map | Temps Shuffle | Temps Reduce | Temps Tot |
+|---------------------|----------------|-----------|--------------|--------------|-----------|
+| 3                   | 0              | 13        | 587          | 468          | 1070       |
+| 5                   | 1              | 55         | 7            | 2            | 126       |
+| 10                  | 1              |           |              |              |           |
+| 15                  | 1              |           |              |              |           |
+| 20                  |                |           |              |              |           |
+| 30                  |                |           |              |              |           |
